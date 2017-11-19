@@ -28,6 +28,8 @@ type
     procedure Draw(ACanvas: TCanvas); virtual;
     procedure SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
     function GetCanvasPoints(): TPointArray;
+    function TopLeft(): TFloatPoint;
+    function BottomRight(): TFloatPoint;
   end;
 
   { FFigureNone }
@@ -228,6 +230,30 @@ begin
   for i := 0 to Length(FPoints) - 1 do
     CanvasPoints[i] := WorldToScreen(FPoints[i].x, FPoints[i].y);
   Result := CanvasPoints;
+end;
+
+function TBigFigureClass.TopLeft: TFloatPoint;
+var
+  i: TFloatPoint;
+begin
+  Result := fPoints[0];
+  for i in fPoints do
+  begin
+    Result.x := min(Result.x, i.x);
+    Result.y := min(Result.y, i.y);
+  end;
+end;
+
+function TBigFigureClass.BottomRight: TFloatPoint;
+var
+  i: TFloatPoint;
+begin
+  Result := fPoints[0];
+  for i in fPoints do
+  begin
+    Result.x := max(Result.x, i.x);
+    Result.y := max(Result.y, i.y);
+  end;
 end;
 
 end.
