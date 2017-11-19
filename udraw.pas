@@ -5,7 +5,7 @@ unit UDraw;
 interface
 
 uses
-  Classes, SysUtils, Graphics, GraphMath, Math;
+  Classes, SysUtils, Graphics, GraphMath, Math, UScale;
 
 const
   cFigureIndexInvalid = -1;
@@ -16,17 +16,24 @@ type
   { TBigFigureClass }
 
   TBigFigureClass = class
-    FPoints: array of TPoint;
+    FPoints: array of TFloatPoint;
   strict protected
     FWidth: integer;
     FPenStyle: TPenStyle;
     FPenColor: TColor;
   public
     function PointsCount(): SizeInt;
-    procedure addPoint(AValue: TPoint);
-    function GetPoints(AIndex: SizeInt): TPoint;
+    procedure addPoint(AValue: TFloatPoint);
+    function GetPoints(AIndex: SizeInt): TFloatPoint;
     procedure Draw(ACanvas: TCanvas); virtual;
-    procedure SetPoint(AIndex: SizeInt; AValue: TPoint);
+    procedure SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
+    function GetCanvasPoints(): TPointArray;
+  end;
+
+  { FFigureNone }
+
+  FFigureNone = class(TBigFigureClass)
+    procedure Draw(ACanvas: TCanvas); override;
   end;
 
   { TPencil }
@@ -77,11 +84,11 @@ type
     procedure Draw(ACanvas: TCanvas); override;
   end;
 
-  TCanvasFigure = class of TBigFigureClass ;
+  TCanvasFigure = class of TBigFigureClass;
 
-  function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
-  function GetFigure(AIndex: SizeInt): TBigFigureClass;
-  function FiguresCount(): SizeInt;
+function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
+function GetFigure(AIndex: SizeInt): TBigFigureClass;
+function FiguresCount(): SizeInt;
 
 
 implementation
@@ -91,19 +98,26 @@ var
 
 function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
 begin
-  Result:= Length(FiguresData);
-  SetLength(FiguresData, Result+1);
+  Result := Length(FiguresData);
+  SetLength(FiguresData, Result + 1);
   FiguresData[Result] := AFigureClass.Create;
 end;
 
 function GetFigure(AIndex: SizeInt): TBigFigureClass;
 begin
- Result:= FiguresData[AIndex];
+  Result := FiguresData[AIndex];
 end;
 
 function FiguresCount: SizeInt;
 begin
-  Result:=Length(FiguresData);
+  Result := Length(FiguresData);
+end;
+
+{ FFigureNone }
+
+procedure FFigureNone.Draw(ACanvas: TCanvas);
+begin
+
 end;
 
 { TPolyLine }
@@ -111,35 +125,44 @@ end;
 procedure TPolyLine.Draw(ACanvas: TCanvas);
 begin
   inherited;
-  ACanvas.Polyline(FPoints);
+  ACanvas.Polyline(GetCanvasPoints());
 end;
 
 { TEllipse }
 
 procedure TEllipse.Draw(ACanvas: TCanvas);
+var
+  CPoints: TPointArray;
 begin
   inherited;
   ACanvas.Brush.Color := FBrushColor;
   ACanvas.Brush.Style := FBrushStyle;
-  ACanvas.Ellipse(FPoints[0].x, FPoints[0].y, FPoints[1].x, FPoints[1].y);
+  CPoints := GetCanvasPoints();
+  ACanvas.Ellipse(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
 end;
 
 { TRectangle }
 
 procedure TRectangle.Draw(ACanvas: TCanvas);
+var
+  CPoints: TPointArray;
 begin
   inherited;
   ACanvas.Brush.Color := FBrushColor;
   ACanvas.Brush.Style := FBrushStyle;
-  ACanvas.Rectangle(FPoints[0].x, FPoints[0].y, FPoints[1].x, FPoints[1].y);
+  CPoints := GetCanvasPoints();
+  ACanvas.Rectangle(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
 end;
 
 { TLine }
 
 procedure TLine.Draw(ACanvas: TCanvas);
+var
+  CPoints: TPointArray;
 begin
   inherited;
-  ACanvas.Line(FPoints[0].x, FPoints[0].y, FPoints[1].x, FPoints[1].y);
+  CPoints := GetCanvasPoints();
+  ACanvas.Line(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
 end;
 
 { TPencil }
@@ -147,27 +170,30 @@ end;
 procedure TPencil.Draw(ACanvas: TCanvas);
 begin
   inherited;
-  ACanvas.Polyline(FPoints);
+  ACanvas.Polyline(GetCanvasPoints());
 end;
 
 { TRndRectangle }
 
 procedure TRndRectangle.Draw(ACanvas: TCanvas);
+var
+  CPoints: TPointArray;
 begin
   inherited;
   ACanvas.Brush.Color := FBrushColor;
   ACanvas.Brush.Style := FBrushStyle;
-  ACanvas.RoundRect(FPoints[0].x, FPoints[0].y, FPoints[1].x, FPoints[1].y,5,5);
+  CPoints := GetCanvasPoints();
+  ACanvas.RoundRect(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y, 40, 40);
 end;
 
 { TBigFigureClass }
 
 function TBigFigureClass.PointsCount: SizeInt;
 begin
-  Result:=Length(FPoints);
+  Result := Length(FPoints);
 end;
 
-procedure TBigFigureClass.addPoint(AValue: TPoint);
+procedure TBigFigureClass.addPoint(AValue: TFloatPoint);
 var
   len: integer;
 begin
@@ -176,7 +202,7 @@ begin
   FPoints[len] := AValue;
 end;
 
-function TBigFigureClass.GetPoints(AIndex: SizeInt): TPoint;
+function TBigFigureClass.GetPoints(AIndex: SizeInt): TFloatPoint;
 begin
   Result := FPoints[AIndex];
 end;
@@ -188,9 +214,21 @@ begin
   ACanvas.Pen.Color := FPenColor;
 end;
 
-procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TPoint);
+procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
 begin
   FPoints[AIndex] := AValue;
 end;
 
+function TBigFigureClass.GetCanvasPoints: TPointArray;
+var
+  CanvasPoints: TPointArray;
+  i: integer;
+begin
+  SetLength(CanvasPoints, Length(FPoints));
+  for i := 0 to Length(FPoints) - 1 do
+    CanvasPoints[i] := WorldToScreen(FPoints[i].x, FPoints[i].y);
+  Result := CanvasPoints;
+end;
+
 end.
+

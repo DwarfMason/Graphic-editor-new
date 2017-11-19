@@ -41,29 +41,29 @@
       <Unit1>
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
+        <ComponentName Value="MainForm"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UMain"/>
       </Unit1>
       <Unit2>
-        <Filename Value="utools.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="UTools"/>
-      </Unit2>
-      <Unit3>
         <Filename Value="udraw.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="UDraw"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="utools.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UTools"/>
       </Unit3>
       <Unit4>
-        <Filename Value="uparam.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="UParam"/>
-      </Unit4>
-      <Unit5>
         <Filename Value="uscale.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="UScale"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="uparam.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UParam"/>
       </Unit5>
     </Units>
   </ProjectOptions>

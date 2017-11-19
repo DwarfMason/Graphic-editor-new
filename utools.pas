@@ -5,7 +5,7 @@ unit UTools;
 interface
 
 uses
-  Classes, SysUtils, UDraw;
+  Classes, SysUtils, UDraw, UScale, Controls;
 
 type
 
@@ -81,10 +81,37 @@ type
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
   end;
 
+  { TZoomTool }
+
+  TZoomTool = class(TBigTools)
+  public
+    class function GetName(): string; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
+    class function GetFigureClass(): TCanvasFigure; override;
+    class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+  end;
+
+  { THandTool }
+
+  THandTool = class(TBigTools)
+  class var
+  CanDraw: boolean;
+  public
+    class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
+    class function GetName(): string; override;
+    class function GetFigureClass(): TCanvasFigure; override;
+    class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+  end;
+
+
+
   TTools = class of TBigTools;
 
 function GetTool(AIndex: SizeInt): TTools;
 function ToolsCount(): SizeInt;
+procedure SetBtn(Button: TMouseButton);
 
 
 implementation
@@ -94,14 +121,54 @@ type
 
 var
   ToolsClasses: TToolsArray;
+  MBtn: TMouseButton;
+
+  procedure SetBtn(Button: TMouseButton);
+  begin
+   MBtn:=Button;
+  end;
+
+{ THandTool }
+
+class procedure THandTool.Start(AFigureIndex: SizeInt; AXY: TPoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  CanDraw := True;
+end;
+
+class function THandTool.GetName: string;
+begin
+  Result:='Рука';
+end;
+
+class function THandTool.GetFigureClass: TCanvasFigure;
+begin
+  Result:=FFigureNone;
+end;
+
+class function THandTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+  If not CanDraw then Exit(False);
+  Result:=True;
+  ScreenOffset.x := ScreenOffset.x + GetFigure(AFigureIndex).GetPoints(0).x -
+  ScreenToWorld(AXY.x, AXY.y).x;
+  ScreenOffset.y := ScreenOffset.y + GetFigure(AFigureIndex).GetPoints(0).y -
+  ScreenToWorld(AXY.x, AXY.y).y;
+end;
+
+class function THandTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+  Result:=False;
+  CanDraw:=False;
+end;
 
   { TBigTools }
 
 class procedure TBigTools.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
   with GetFigure(AFigureIndex) do begin
-    AddPoint(AXY);
-    AddPoint(AXY);
+    AddPoint(ScreenToWorld(AXY.x, AXY.y));
+    AddPoint(ScreenToWorld(AXY.x, AXY.y));
   end;
 end;
 
@@ -116,6 +183,38 @@ begin
   Result := AFigureIndex <> cFigureIndexInvalid;
 end;
 
+
+{ TZoomTool }
+
+class function TZoomTool.GetName: string;
+begin
+  Result:='Зум';
+end;
+
+class procedure TZoomTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+ inherited Start (AFigureIndex, AXY);
+ If (MBtn = mbExtra1) or (MBtn = mbLeft) then
+ ZoomPoint(ScreenToWorld(AXY.x, AXY.y),Zoom*2);
+
+ If (MBtn = mbExtra2) or (Mbtn = mbRight) then
+ ZoomPoint(ScreenToWorld(AXY.x, AXY.y), Zoom/2);
+end;
+
+class function TZoomTool.GetFigureClass: TCanvasFigure;
+begin
+  Result:= FFigureNone;
+end;
+
+class function TZoomTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+  Result:= False;
+end;
+
+class function TZoomTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+  Result:= False;
+end;
 
 
 function GetTool(AIndex: SizeInt): TTools;
@@ -144,7 +243,7 @@ class function TRndRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint
   ): boolean;
 begin
     Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,AXY);
+  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
@@ -169,7 +268,7 @@ end;
 class function TEllipseTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
     Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,AXY);
+  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
@@ -194,7 +293,7 @@ class function TRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint
   ): boolean;
 begin
   Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,AXY);
+  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
@@ -222,14 +321,14 @@ var
 begin
   Result:=inherited; If not Result then Exit;
   Figure:= GetFigure(AFigureIndex);
-  Figure.SetPoint(Figure.PointsCount()-1, AXY);
+  Figure.SetPoint(Figure.PointsCount()-1, ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TPolyLineTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := AFigureIndex <> cFigureIndexInvalid;
   If not Result then Exit;
-  GetFigure(AFigureIndex).AddPoint(AXY);
+  GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
 end;
 
 { TLineTool }
@@ -247,7 +346,7 @@ end;
 class function TLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,AXY);
+  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TLineTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
@@ -270,7 +369,7 @@ end;
 class function TPencilTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).AddPoint(AXY);
+  GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TPencilTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
@@ -282,6 +381,8 @@ end;
 initialization
 
  ToolsClasses := TToolsArray.create(
+  THandTool,
+  TZoomTool,
   TRndRectangleTool,
   TEllipseTool,
   TRectangleTool,
@@ -291,3 +392,4 @@ initialization
   );
 
 end.
+
