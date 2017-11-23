@@ -18,6 +18,10 @@ type
     FileMenu: TMenuItem;
     ExitBtn: TMenuItem;
     HelpMenu: TMenuItem;
+    MenuItem1: TMenuItem;
+    DeleteBtn: TMenuItem;
+    SelectAll: TMenuItem;
+    Deselect: TMenuItem;
     ScrollHorizontal: TScrollBar;
     ScrollVertical: TScrollBar;
     ZoomQ: TFloatSpinEdit;
@@ -25,8 +29,12 @@ type
     ToolsList: TListBox;
     WorkPlace: TPaintBox;
     ToolBar: TPanel;
+    procedure DeleteBtnClick(Sender: TObject);
+    procedure DeselectClick(Sender: TObject);
     procedure ExitBtnClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure HelpMenuClick(Sender: TObject);
+    procedure SelectAllClick(Sender: TObject);
     procedure ToolsListSelectionChange(Sender: TObject; User: boolean);
     procedure WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
@@ -69,8 +77,24 @@ var
 begin
   SetScrollBar();
   for i := 0 to ToolsCount() - 1 do
-    ToolsList.Items.add(GetTool(i).GetName());
+  ToolsList.Items.add(GetTool(i).GetName());
   FCurrentFigureIndex := -1;
+  workplace.canvas.Brush.color:=clWhite;
+end;
+
+procedure TMainForm.HelpMenuClick(Sender: TObject);
+begin
+  ShowMessage('Работа выполнена студентом 1 курса, Балашенко Игорем Евгеньевичем');
+end;
+
+procedure TMainForm.SelectAllClick(Sender: TObject);
+var
+  i: SizeInt;
+begin
+  for i := 0 to FiguresCount() - 1 do begin
+    GetFigure(i).selected:=true;
+    invalidate;
+  end;
 end;
 
 procedure TMainForm.ChangeBorders;
@@ -144,6 +168,22 @@ begin
   Close();
 end;
 
+procedure TMainForm.DeselectClick(Sender: TObject);
+var
+  i: SizeInt;
+begin
+  for i := 0 to FiguresCount() - 1 do begin
+    GetFigure(i).selected:=false;
+    invalidate;
+  end;
+end;
+
+procedure TMainForm.DeleteBtnClick(Sender: TObject);
+begin
+  DeleteSelected();
+  invalidate;
+end;
+
 
 procedure TMainForm.WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
@@ -176,14 +216,25 @@ begin
   if (not FCurrentToolClass.Step(FCurrentFigureIndex, Point(X, Y))) or
     (Button = mbRight) then
   begin
-    if FCurrentToolClass.Finish(FCurrentFigureIndex) then
+        if (FCurrentToolClass = TSelectionTool) or (FCurrentToolClass = THandTool)
+          or (FCurrentToolClass = TZoomTool)
+          then begin
+              FCurrentToolClass.Finish(FCurrentFigureIndex);
+              FCurrentFigureIndex:= cFigureIndexInvalid;
+              WorkPlace.invalidate();
+              ToolBar.Enabled := True;
+
+        end
+        else
+    if (FCurrentToolClass.Finish(FCurrentFigureIndex)) then
     begin
       FCurrentFigureIndex := cFigureIndexInvalid;
       ToolBar.Enabled := True;
       WorkPlace.invalidate();
+      end;
     end;
   end;
-end;
+
 
 procedure TMainForm.WorkPlacePaint(Sender: TObject);
 var
@@ -191,8 +242,10 @@ var
 begin
   ZoomQ.Value := double(Zoom * 100);
   Workplace.canvas.Clear();
-  for i := 0 to FiguresCount() - 1 do
+  for i := 0 to FiguresCount() - 1 do begin
     GetFigure(i).Draw(WorkPlace.Canvas);
+    GetFigure(i).SelectionDraw(WorkPlace.Canvas);
+  end;
 end;
 
 procedure TMainForm.ZoomQChange(Sender: TObject);

@@ -22,7 +22,9 @@ type
     FPenStyle: TPenStyle;
     FPenColor: TColor;
   public
+    selected: boolean;
     function PointsCount(): SizeInt;
+    function InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
     procedure addPoint(AValue: TFloatPoint);
     function GetPoints(AIndex: SizeInt): TFloatPoint;
     procedure Draw(ACanvas: TCanvas); virtual;
@@ -30,6 +32,13 @@ type
     function GetCanvasPoints(): TPointArray;
     function TopLeft(): TFloatPoint;
     function BottomRight(): TFloatPoint;
+    procedure SelectionDraw(ACanvas: TCanvas);
+  end;
+
+  { FFigureSelection }
+
+  FFigureSelection = class(TBigFigureClass)
+    procedure Draw(ACanvas: TCanvas); override;
   end;
 
   { FFigureNone }
@@ -91,12 +100,43 @@ type
 function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
 function GetFigure(AIndex: SizeInt): TBigFigureClass;
 function FiguresCount(): SizeInt;
+procedure DeleteLastFigure(AIndex: SizeInt);
+procedure DeleteSelected();
 
 
 implementation
 
 var
   FiguresData: array of TBigFigureClass;
+
+procedure DeleteLastFigure(AIndex: SizeInt);
+begin
+  FreeAndNil(FiguresData[aIndex]);
+  SetLength(FiguresData, Length(FiguresData) - 1);
+end;
+
+procedure DeleteSelected();
+  var
+  i, j, k: integer;
+  begin
+  j := 0;
+  for i := Low(FiguresData) to High(FiguresData) do
+  if (FiguresData[i] <> nil) and (FiguresData[i].Selected) then
+  begin
+  FreeAndNil(FiguresData[i]);
+  inc(j);
+  end;
+  for k := 1 to j do
+  for i := Low(FiguresData) to High(FiguresData) do
+  begin
+  if (FiguresData[i] = nil) and (i+1 < Length(FiguresData)) then
+  begin
+  FiguresData[i] := FiguresData[i+1];
+  FiguresData[i+1] := nil;
+  end;
+  end;
+  SetLength(FiguresData, Length(FiguresData) - j);
+  end;
 
 function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
 begin
@@ -113,6 +153,20 @@ end;
 function FiguresCount: SizeInt;
 begin
   Result := Length(FiguresData);
+end;
+
+{ FFigureSelection }
+
+procedure FFigureSelection.Draw(ACanvas: TCanvas);
+var
+  CPoints: TPointArray;
+begin
+  ACanvas.Pen.color := clBlue;
+  ACanvas.Pen.Width := 2;
+  ACanvas.Pen.Style := psDash;
+  ACanvas.Brush.Style := BsClear;
+  CPoints := GetCanvasPoints();
+  ACanvas.Rectangle(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
 end;
 
 { FFigureNone }
@@ -195,6 +249,16 @@ begin
   Result := Length(FPoints);
 end;
 
+function TBigFigureClass.InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
+var
+  FigureTL, FigureBR: TFloatPoint;
+begin
+  FigureTL := TopLeft;
+  FigureBR := BottomRight;
+  Result := (SelectionTL.x <= FigureTL.x) and (SelectionTL.y <= FigureTL.y) and
+    (SelectionBR.x >= FigureBR.x) and (SelectionBR.Y >= FigureBR.Y);
+end;
+
 procedure TBigFigureClass.addPoint(AValue: TFloatPoint);
 var
   len: integer;
@@ -256,5 +320,24 @@ begin
   end;
 end;
 
+procedure TBigFigureClass.SelectionDraw(ACanvas: TCanvas);
+var
+  FigureTL, FigureBR: TPoint;
+begin
+  if Selected then
+  begin
+    FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
+    FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
+    ACanvas.Pen.color := clBlue;
+    ACanvas.Pen.Width := 2;
+    ACanvas.Pen.Style := psDash;
+    ACanvas.Brush.Style := BsClear;
+    ACanvas.Rectangle(FigureTL.x - 3, FigureTL.y - 3, FigureBR.x + 3, FigureBR.y + 3);
+  end;
+
+end;
+
 end.
+
+
 

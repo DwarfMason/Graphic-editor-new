@@ -90,6 +90,7 @@ type
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Finish(AFigureIndex: SizeInt): boolean; override;
   end;
 
   { THandTool }
@@ -103,6 +104,19 @@ type
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Finish(AFigureIndex: SizeInt): boolean; override;
+  end;
+
+  { TSelectionTool }
+
+  TSelectionTool = class(TBigTools)
+    public
+    class function GetName(): string; override;
+    class function GetFigureClass(): TCanvasFigure; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
+    class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Finish(AFigureIndex: SizeInt): boolean; override;
   end;
 
 
@@ -127,6 +141,41 @@ var
   begin
    MBtn:=Button;
   end;
+
+{ TSelectionTool }
+
+class function TSelectionTool.GetName: string;
+begin
+  Result:='Выделитель';
+end;
+
+class function TSelectionTool.GetFigureClass: TCanvasFigure;
+begin
+  Result:=FFigureSelection;
+end;
+
+class procedure TSelectionTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+end;
+
+class function TSelectionTool.Update(AFigureIndex: SizeInt; AXY: TPoint
+  ): boolean;
+begin
+  Result:=inherited; If not Result then Exit;
+  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+end;
+
+class function TSelectionTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+   Result:= False;
+end;
+
+class function TSelectionTool.Finish(AFigureIndex: SizeInt): boolean;
+begin
+  Result:= inherited Finish(AFigureIndex);
+  DeleteLastFigure(AFigureIndex);
+end;
 
 { THandTool }
 
@@ -160,6 +209,12 @@ class function THandTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result:=False;
   CanDraw:=False;
+end;
+
+class function THandTool.Finish(AFigureIndex: SizeInt): boolean;
+begin
+  Result:=inherited Finish(AFigureIndex);
+  DeleteLastFigure(AFigureIndex);
 end;
 
   { TBigTools }
@@ -214,6 +269,12 @@ end;
 class function TZoomTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result:= False;
+end;
+
+class function TZoomTool.Finish(AFigureIndex: SizeInt): boolean;
+begin
+  Result:=inherited Finish(AFigureIndex);
+  DeleteLastFigure(AFigureIndex);
 end;
 
 
@@ -381,6 +442,7 @@ end;
 initialization
 
  ToolsClasses := TToolsArray.create(
+  TSelectionTool,
   THandTool,
   TZoomTool,
   TRndRectangleTool,
