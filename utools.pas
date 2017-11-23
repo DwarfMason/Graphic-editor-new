@@ -175,6 +175,7 @@ class function TSelectionTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
   Result:= inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
+
 end;
 
 { THandTool }

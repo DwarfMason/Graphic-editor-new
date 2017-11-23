@@ -95,6 +95,7 @@ begin
     GetFigure(i).selected:=true;
     invalidate;
   end;
+  PSelectAll();
 end;
 
 procedure TMainForm.ChangeBorders;
@@ -176,12 +177,14 @@ begin
     GetFigure(i).selected:=false;
     invalidate;
   end;
+  UnSelectAll();
 end;
 
 procedure TMainForm.DeleteBtnClick(Sender: TObject);
 begin
   DeleteSelected();
   invalidate;
+  UnSelectAll();
 end;
 
 
