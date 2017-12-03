@@ -50,6 +50,7 @@ type
       Shift: TShiftState; X, Y: integer);
     procedure WorkPlacePaint(Sender: TObject);
     procedure ZoomQChange(Sender: TObject);
+    procedure ZoomQKeyPress(Sender: TObject; var Key: char);
 
   strict private
     { private declarations }
@@ -77,9 +78,9 @@ var
 begin
   SetScrollBar();
   for i := 0 to ToolsCount() - 1 do
-  ToolsList.Items.add(GetTool(i).GetName());
+    ToolsList.Items.add(GetTool(i).GetName());
   FCurrentFigureIndex := -1;
-  workplace.canvas.Brush.color:=clWhite;
+  workplace.canvas.Brush.color := clWhite;
 end;
 
 procedure TMainForm.HelpMenuClick(Sender: TObject);
@@ -91,8 +92,9 @@ procedure TMainForm.SelectAllClick(Sender: TObject);
 var
   i: SizeInt;
 begin
-  for i := 0 to FiguresCount() - 1 do begin
-    GetFigure(i).selected:=true;
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    GetFigure(i).selected := True;
     invalidate;
   end;
   PSelectAll();
@@ -157,8 +159,8 @@ begin
   WorkPlace.Invalidate();
 end;
 
-procedure TMainForm.ScrollHorizontalScroll(Sender: TObject; ScrollCode: TScrollCode;
-  var ScrollPos: integer);
+procedure TMainForm.ScrollHorizontalScroll(Sender: TObject;
+  ScrollCode: TScrollCode; var ScrollPos: integer);
 begin
   ScreenOffset.X := ScrollHorizontal.Position;
   Invalidate;
@@ -173,8 +175,9 @@ procedure TMainForm.DeselectClick(Sender: TObject);
 var
   i: SizeInt;
 begin
-  for i := 0 to FiguresCount() - 1 do begin
-    GetFigure(i).selected:=false;
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    GetFigure(i).selected := False;
     invalidate;
   end;
   UnSelectAll();
@@ -208,7 +211,7 @@ begin
     exit;
   if FCurrentToolClass.Update(FCurrentFigureIndex, Point(X, Y)) then
     WorkPlace.invalidate();
-    SetScrollBar();
+  SetScrollBar();
 end;
 
 procedure TMainForm.WorkPlaceMouseUp(Sender: TObject; Button: TMouseButton;
@@ -219,24 +222,15 @@ begin
   if (not FCurrentToolClass.Step(FCurrentFigureIndex, Point(X, Y))) or
     (Button = mbRight) then
   begin
-        if (FCurrentToolClass = TSelectionTool) or (FCurrentToolClass = THandTool)
-          or (FCurrentToolClass = TZoomTool)
-          then begin
-              FCurrentToolClass.Finish(FCurrentFigureIndex);
-              FCurrentFigureIndex:= cFigureIndexInvalid;
-              WorkPlace.invalidate();
-              ToolBar.Enabled := True;
 
-        end
-        else
     if (FCurrentToolClass.Finish(FCurrentFigureIndex)) then
     begin
       FCurrentFigureIndex := cFigureIndexInvalid;
       ToolBar.Enabled := True;
       WorkPlace.invalidate();
-      end;
     end;
   end;
+end;
 
 
 procedure TMainForm.WorkPlacePaint(Sender: TObject);
@@ -245,10 +239,11 @@ var
 begin
   ZoomQ.Value := double(Zoom * 100);
   Workplace.canvas.Clear();
-  for i := 0 to FiguresCount() - 1 do begin
+  for i := 0 to FiguresCount() - 1 do
     GetFigure(i).Draw(WorkPlace.Canvas);
+
+  for i := 0 to FiguresCount() - 1 do
     GetFigure(i).SelectionDraw(WorkPlace.Canvas);
-  end;
 end;
 
 procedure TMainForm.ZoomQChange(Sender: TObject);
@@ -261,6 +256,10 @@ begin
   invalidate();
 end;
 
+procedure TMainForm.ZoomQKeyPress(Sender: TObject; var Key: char);
+begin
+  key := #0;
+end;
 
 procedure TMainForm.ToolsListSelectionChange(Sender: TObject; User: boolean);
 begin

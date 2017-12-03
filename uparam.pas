@@ -5,7 +5,7 @@ unit UParam;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Graphics;
 
 implementation
 

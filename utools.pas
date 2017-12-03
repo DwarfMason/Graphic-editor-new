@@ -96,8 +96,8 @@ type
   { THandTool }
 
   THandTool = class(TBigTools)
-  class var
-  CanDraw: boolean;
+    class var
+    CanDraw: boolean;
   public
     class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
     class function GetName(): string; override;
@@ -110,7 +110,7 @@ type
   { TSelectionTool }
 
   TSelectionTool = class(TBigTools)
-    public
+  public
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
@@ -137,21 +137,21 @@ var
   ToolsClasses: TToolsArray;
   MBtn: TMouseButton;
 
-  procedure SetBtn(Button: TMouseButton);
-  begin
-   MBtn:=Button;
-  end;
+procedure SetBtn(Button: TMouseButton);
+begin
+  MBtn := Button;
+end;
 
 { TSelectionTool }
 
 class function TSelectionTool.GetName: string;
 begin
-  Result:='Выделитель';
+  Result := 'Выделитель';
 end;
 
 class function TSelectionTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:=FFigureSelection;
+  Result := FFigureSelection;
 end;
 
 class procedure TSelectionTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
@@ -159,21 +159,22 @@ begin
   inherited Start(AFigureIndex, AXY);
 end;
 
-class function TSelectionTool.Update(AFigureIndex: SizeInt; AXY: TPoint
-  ): boolean;
+class function TSelectionTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TSelectionTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-   Result:= False;
+  Result := False;
 end;
 
 class function TSelectionTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result:= inherited Finish(AFigureIndex);
+  Result := inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
 
 end;
@@ -188,48 +189,49 @@ end;
 
 class function THandTool.GetName: string;
 begin
-  Result:='Рука';
+  Result := 'Рука';
 end;
 
 class function THandTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:=FFigureNone;
+  Result := FFigureNone;
 end;
 
 class function THandTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  If not CanDraw then Exit(False);
-  Result:=True;
+  if not CanDraw then
+    Exit(False);
+  Result := True;
   ScreenOffset.x := ScreenOffset.x + GetFigure(AFigureIndex).GetPoints(0).x -
-  ScreenToWorld(AXY.x, AXY.y).x;
+    ScreenToWorld(AXY.x, AXY.y).x;
   ScreenOffset.y := ScreenOffset.y + GetFigure(AFigureIndex).GetPoints(0).y -
-  ScreenToWorld(AXY.x, AXY.y).y;
+    ScreenToWorld(AXY.x, AXY.y).y;
 end;
 
 class function THandTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=False;
-  CanDraw:=False;
+  Result := False;
+  CanDraw := False;
 end;
 
 class function THandTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result:=inherited Finish(AFigureIndex);
+  Result := inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
 end;
 
-  { TBigTools }
+{ TBigTools }
 
 class procedure TBigTools.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
-  with GetFigure(AFigureIndex) do begin
+  with GetFigure(AFigureIndex) do
+  begin
     AddPoint(ScreenToWorld(AXY.x, AXY.y));
     AddPoint(ScreenToWorld(AXY.x, AXY.y));
   end;
 end;
 
-class function TBigTools.Update(AFigureIndex: SizeInt;
-  AXY: TPoint): boolean;
+class function TBigTools.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := AFigureIndex <> cFigureIndexInvalid;
 end;
@@ -244,37 +246,37 @@ end;
 
 class function TZoomTool.GetName: string;
 begin
-  Result:='Зум';
+  Result := 'Зум';
 end;
 
 class procedure TZoomTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
- inherited Start (AFigureIndex, AXY);
- If (MBtn = mbExtra1) or (MBtn = mbLeft) then
- ZoomPoint(ScreenToWorld(AXY.x, AXY.y),Zoom*2);
+  inherited Start(AFigureIndex, AXY);
+  if (MBtn = mbExtra1) or (MBtn = mbLeft) then
+    ZoomPoint(ScreenToWorld(AXY.x, AXY.y), Zoom * 2);
 
- If (MBtn = mbExtra2) or (Mbtn = mbRight) then
- ZoomPoint(ScreenToWorld(AXY.x, AXY.y), Zoom/2);
+  if (MBtn = mbExtra2) or (Mbtn = mbRight) then
+    ZoomPoint(ScreenToWorld(AXY.x, AXY.y), Zoom / 2);
 end;
 
 class function TZoomTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= FFigureNone;
+  Result := FFigureNone;
 end;
 
 class function TZoomTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:= False;
+  Result := False;
 end;
 
 class function TZoomTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:= False;
+  Result := False;
 end;
 
 class function TZoomTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result:=inherited Finish(AFigureIndex);
+  Result := inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
 end;
 
@@ -293,103 +295,108 @@ end;
 
 class function TRndRectangleTool.GetName: string;
 begin
-  Result:= 'Круглый не круг'
+  Result := 'Круглый не круг';
 end;
 
 class function TRndRectangleTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= TRndRectangle;
+  Result := TRndRectangle;
 end;
 
-class function TRndRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint
-  ): boolean;
+class function TRndRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-    Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
-class function TRndRectangleTool.Step(AFigureIndex: SizeInt; AXY: TPoint
-  ): boolean;
+class function TRndRectangleTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=False;
+  Result := False;
 end;
 
 { TEllipseTool }
 
 class function TEllipseTool.GetName: string;
 begin
-  Result:= 'Эллипс';
+  Result := 'Эллипс';
 end;
 
 class function TEllipseTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= TEllipse;
+  Result := TEllipse;
 end;
 
 class function TEllipseTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-    Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
 class function TEllipseTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=False;
+  Result := False;
 end;
 
 { TRectangleTool }
 
 class function TRectangleTool.GetName: string;
 begin
-  Result:= 'Прямоугольник';
+  Result := 'Прямоугольник';
 end;
 
 class function TRectangleTool.GetFigureClass: TCanvasFigure;
 begin
-   Result:= TRectangle;
+  Result := TRectangle;
 end;
 
-class function TRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint
-  ): boolean;
+class function TRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
 
 end;
 
 class function TRectangleTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=False;
+  Result := False;
 end;
 
 { TPolyLineTool }
 
 class function TPolyLineTool.GetName: string;
 begin
-  Result:='Ломаная';
+  Result := 'Ломаная';
 end;
 
 class function TPolyLineTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= TPolyLine;
+  Result := TPolyLine;
 end;
 
-class function TPolyLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint
-  ): boolean;
+class function TPolyLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 var
   Figure: TBigFigureClass;
 begin
-  Result:=inherited; If not Result then Exit;
-  Figure:= GetFigure(AFigureIndex);
-  Figure.SetPoint(Figure.PointsCount()-1, ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  Figure := GetFigure(AFigureIndex);
+  Figure.SetPoint(Figure.PointsCount() - 1, ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TPolyLineTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := AFigureIndex <> cFigureIndexInvalid;
-  If not Result then Exit;
+  if not Result then
+    Exit;
   GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
 end;
 
@@ -397,62 +404,56 @@ end;
 
 class function TLineTool.GetName: string;
 begin
-  Result:='Линия';
+  Result := 'Линия';
 end;
 
 class function TLineTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= TLine;
+  Result := TLine;
 end;
 
 class function TLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=inherited; If not Result then Exit;
-  GetFigure(AFigureIndex).SetPoint(1,ScreenToWorld(AXY.x, AXY.y));
+  Result := inherited;
+  if not Result then
+    Exit;
+  GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TLineTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=false;
+  Result := False;
 end;
 
 { TPencilTool }
 
 class function TPencilTool.GetName: string;
 begin
-  Result:= 'Карандаш';
+  Result := 'Карандаш';
 end;
 
 class function TPencilTool.GetFigureClass: TCanvasFigure;
 begin
-  Result:= TPencil;
+  Result := TPencil;
 end;
 
 class function TPencilTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=inherited; If not Result then Exit;
+  Result := inherited;
+  if not Result then
+    Exit;
   GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
 end;
 
 class function TPencilTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
-  Result:=false;
+  Result := False;
 end;
 
 
 initialization
 
- ToolsClasses := TToolsArray.create(
-  TSelectionTool,
-  THandTool,
-  TZoomTool,
-  TRndRectangleTool,
-  TEllipseTool,
-  TRectangleTool,
-  TPolyLineTool,
-  TLineTool,
-  TPencilTool
-  );
-
+  ToolsClasses := TToolsArray.Create(TSelectionTool, THandTool,
+    TZoomTool, TRndRectangleTool, TEllipseTool, TRectangleTool,
+    TPolyLineTool, TLineTool, TPencilTool);
 end.
-

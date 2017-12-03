@@ -111,7 +111,6 @@ implementation
 var
   FiguresData: array of TBigFigureClass;
   AMinCor, AMaxCor: TFloatPoint;
-  counter: SizeInt;
 
 procedure DeleteLastFigure(AIndex: SizeInt);
 begin
@@ -120,43 +119,43 @@ begin
 end;
 
 procedure DeleteSelected();
-  var
+var
   i, j, k: integer;
-  begin
+begin
   j := 0;
   for i := Low(FiguresData) to High(FiguresData) do
-  if (FiguresData[i] <> nil) and (FiguresData[i].Selected) then
-  begin
-  FreeAndNil(FiguresData[i]);
-  inc(j);
-  end;
+    if (FiguresData[i] <> nil) and (FiguresData[i].Selected) then
+    begin
+      FreeAndNil(FiguresData[i]);
+      Inc(j);
+    end;
   for k := 1 to j do
-  for i := Low(FiguresData) to High(FiguresData) do
-  begin
-  if (FiguresData[i] = nil) and (i+1 < Length(FiguresData)) then
-  begin
-  FiguresData[i] := FiguresData[i+1];
-  FiguresData[i+1] := nil;
-  end;
-  end;
+    for i := Low(FiguresData) to High(FiguresData) do
+    begin
+      if (FiguresData[i] = nil) and (i + 1 < Length(FiguresData)) then
+      begin
+        FiguresData[i] := FiguresData[i + 1];
+        FiguresData[i + 1] := nil;
+      end;
+    end;
   SetLength(FiguresData, Length(FiguresData) - j);
-  end;
+end;
 
 procedure PSelectAll;
 begin
-  AMinCor.x:=5 - MaxInt;
-  AMinCor.y:=5 - MaxInt;
-  AMaxCor.x:=MaxInt;
-  AMaxCor.y:=MaxInt;
+  AMinCor.x := 5 - MaxInt;
+  AMinCor.y := 5 - MaxInt;
+  AMaxCor.x := MaxInt;
+  AMaxCor.y := MaxInt;
 
 end;
 
 procedure UnselectAll;
 begin
-  AMinCor.x:=MaxInt;
-  AMinCor.y:=MaxInt;
-  AMaxCor.x:=5 - MaxInt;
-  AMaxCor.y:=5 - MaxInt;
+  AMinCor.x := MaxInt;
+  AMinCor.y := MaxInt;
+  AMaxCor.x := 5 - MaxInt;
+  AMaxCor.y := 5 - MaxInt;
 
 end;
 
@@ -190,10 +189,10 @@ begin
   ACanvas.Brush.Style := BsClear;
   CPoints := GetCanvasPoints();
   ACanvas.Rectangle(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
-  AMinCor.x:=min(CPoints[0].x,CPoints[1].x);
-  AMinCor.y:=min(CPoints[0].y,CPoints[1].y);
-  AMaxCor.x:=max(CPoints[0].x,CPoints[1].x);
-  AMaxCor.y:=max(CPoints[0].y,CPoints[1].y);
+  AMinCor.x := min(CPoints[0].x, CPoints[1].x);
+  AMinCor.y := min(CPoints[0].y, CPoints[1].y);
+  AMaxCor.x := max(CPoints[0].x, CPoints[1].x);
+  AMaxCor.y := max(CPoints[0].y, CPoints[1].y);
 end;
 
 { FFigureNone }
@@ -206,12 +205,11 @@ end;
 { TPolyLine }
 
 procedure TPolyLine.Draw(ACanvas: TCanvas);
+var
+  counter: SizeInt;
 begin
   inherited;
   ACanvas.Polyline(GetCanvasPoints());
-    For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-
 end;
 
 { TEllipse }
@@ -226,9 +224,6 @@ begin
   ACanvas.Brush.Style := FBrushStyle;
   CPoints := GetCanvasPoints();
   ACanvas.Ellipse(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
-    For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-
 end;
 
 { TRectangle }
@@ -243,9 +238,6 @@ begin
   ACanvas.Brush.Style := FBrushStyle;
   CPoints := GetCanvasPoints();
   ACanvas.Rectangle(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
-    For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-
 end;
 
 { TLine }
@@ -258,21 +250,16 @@ begin
   inherited;
   CPoints := GetCanvasPoints();
   ACanvas.Line(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
-    For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-
 end;
 
 { TPencil }
 
 procedure TPencil.Draw(ACanvas: TCanvas);
 var
-Counter: SizeInt;
+  Counter: SizeInt;
 begin
   inherited;
   ACanvas.Polyline(GetCanvasPoints());
-  For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
 end;
 
 { TRndRectangle }
@@ -287,9 +274,6 @@ begin
   ACanvas.Brush.Style := FBrushStyle;
   CPoints := GetCanvasPoints();
   ACanvas.RoundRect(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y, 40, 40);
-    For Counter:= 0 to FiguresCount()-1 do
-  GetFigure(Counter).selected:=GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-
 end;
 
 { TBigFigureClass }
@@ -303,8 +287,8 @@ function TBigFigureClass.InRectangle(SelectionTL, SelectionBR: TFloatPoint): boo
 var
   FigureTL, FigureBR: TFloatPoint;
 begin
-  FigureTL := TopLeft;
-  FigureBR := BottomRight;
+  FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
+  FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
   Result := (SelectionTL.x <= FigureTL.x) and (SelectionTL.y <= FigureTL.y) and
     (SelectionBR.x >= FigureBR.x) and (SelectionBR.Y >= FigureBR.Y);
 end;
@@ -324,10 +308,14 @@ begin
 end;
 
 procedure TBigFigureClass.Draw(ACanvas: TCanvas);
+var
+  counter:SizeInt;
 begin
   ACanvas.Pen.Width := FWidth;
   ACanvas.Pen.Style := FPenStyle;
   ACanvas.Pen.Color := FPenColor;
+  for Counter := 0 to FiguresCount() - 1 do
+    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
 end;
 
 procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
@@ -346,18 +334,6 @@ begin
   Result := CanvasPoints;
 end;
 
-function TBigFigureClass.TopLeft: TFloatPoint;
-var
-  i: TFloatPoint;
-begin
-  Result := fPoints[0];
-  for i in fPoints do
-  begin
-    Result.x := min(Result.x, i.x);
-    Result.y := min(Result.y, i.y);
-  end;
-end;
-
 function TBigFigureClass.BottomRight: TFloatPoint;
 var
   i: TFloatPoint;
@@ -367,6 +343,19 @@ begin
   begin
     Result.x := max(Result.x, i.x);
     Result.y := max(Result.y, i.y);
+  end;
+end;
+
+function TBigFigureClass.TopLeft: TFloatPoint;
+var
+  i: TFloatPoint;
+begin
+  Result.x := FPoints[0].x;
+  Result.y := FPoints[0].y;
+  for i in fPoints do
+  begin
+    Result.x := min(Result.x, i.x);
+    Result.y := min(Result.y, i.y);
   end;
 end;
 
@@ -388,10 +377,10 @@ begin
 end;
 
 begin
-  AMinCor.x:=999999999;
-  AMinCor.y:=999999999;
-  AMaxCor.x:=0;
-  AMaxCor.y:=0;
+  AMinCor.x := MaxInt;
+  AMinCor.y := MaxInt;
+  AMaxCor.x := 5-MaxInt;
+  AMaxCor.y := 5-MaxInt;
 end.
 
 
