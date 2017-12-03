@@ -5,7 +5,7 @@ unit UDraw;
 interface
 
 uses
-  Classes, SysUtils, Graphics, GraphMath, Math, UScale;
+  Classes, SysUtils, Graphics, GraphMath, Math, UScale, UParam;
 
 const
   cFigureIndexInvalid = -1;
@@ -21,9 +21,18 @@ type
     FWidth: integer;
     FPenStyle: TPenStyle;
     FPenColor: TColor;
+    FBrushStyle: TBrushStyle;
+    FBrushColor: TColor;
+    FRadius: integer;
   public
     selected: boolean;
     function PointsCount(): SizeInt;
+    property Width: integer read FWidth write FWidth;
+    property PenColor: TColor read FPenColor write FPenColor;
+    property PenStyle: TPenStyle read FPenStyle write FPenStyle;
+    property BrushStyle: TBrushStyle read FBrushStyle write FBrushStyle;
+    property BrushColor: TColor read FBrushColor write FBrushColor;
+    property Radius: integer read FRadius write FRadius;
     function InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
     procedure addPoint(AValue: TFloatPoint);
     function GetPoints(AIndex: SizeInt): TFloatPoint;
@@ -34,6 +43,7 @@ type
     function BottomRight(): TFloatPoint;
     procedure SelectionDraw(ACanvas: TCanvas);
   end;
+
 
   { FFigureSelection }
 
@@ -68,9 +78,6 @@ type
   { TRectangle }
 
   TRectangle = class(TBigFigureClass)
-  strict protected
-    FBrushStyle: TBrushStyle;
-    FBrushColor: TColor;
   public
     procedure Draw(ACanvas: TCanvas); override;
   end;
@@ -78,9 +85,6 @@ type
   { TEllipse }
 
   TEllipse = class(TBigFigureClass)
-  strict protected
-    FBrushStyle: TBrushStyle;
-    FBrushColor: TColor;
   public
     procedure Draw(ACanvas: TCanvas); override;
   end;
@@ -88,9 +92,6 @@ type
   { TRndRectangle }
 
   TRndRectangle = class(TBigFigureClass)
-    FBrushStyle: TBrushStyle;
-    FBrushColor: TColor;
-    FRadius: integer;
   public
     procedure Draw(ACanvas: TCanvas); override;
   end;
@@ -273,7 +274,8 @@ begin
   ACanvas.Brush.Color := FBrushColor;
   ACanvas.Brush.Style := FBrushStyle;
   CPoints := GetCanvasPoints();
-  ACanvas.RoundRect(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y, 40, 40);
+  ACanvas.RoundRect(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y,
+    Radius, Radius);
 end;
 
 { TBigFigureClass }
@@ -309,7 +311,7 @@ end;
 
 procedure TBigFigureClass.Draw(ACanvas: TCanvas);
 var
-  counter:SizeInt;
+  counter: SizeInt;
 begin
   ACanvas.Pen.Width := FWidth;
   ACanvas.Pen.Style := FPenStyle;
@@ -371,7 +373,8 @@ begin
     ACanvas.Pen.Width := 2;
     ACanvas.Pen.Style := psDash;
     ACanvas.Brush.Style := BsClear;
-    ACanvas.Rectangle(FigureTL.x - 3, FigureTL.y - 3, FigureBR.x + 3, FigureBR.y + 3);
+    ACanvas.Rectangle(FigureTL.x - (FWidth div 2) - 3, FigureTL.y -
+      (FWidth div 2) - 3, FigureBR.x + (FWidth div 2) + 3, FigureBR.y + (FWidth div 2) + 3);
   end;
 
 end;
@@ -379,9 +382,7 @@ end;
 begin
   AMinCor.x := MaxInt;
   AMinCor.y := MaxInt;
-  AMaxCor.x := 5-MaxInt;
-  AMaxCor.y := 5-MaxInt;
+  AMaxCor.x := 5 - MaxInt;
+  AMaxCor.y := 5 - MaxInt;
 end.
-
-
 

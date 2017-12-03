@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   StdCtrls, Spin, Menus, GraphMath, Math,
-  UDraw, UTools, UScale;
+  UDraw, UTools, UScale, UParam;
 
 type
 
@@ -20,6 +20,7 @@ type
     HelpMenu: TMenuItem;
     MenuItem1: TMenuItem;
     DeleteBtn: TMenuItem;
+    ParamPanel: TPanel;
     SelectAll: TMenuItem;
     Deselect: TMenuItem;
     ScrollHorizontal: TScrollBar;
@@ -190,7 +191,6 @@ begin
   UnSelectAll();
 end;
 
-
 procedure TMainForm.WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
@@ -198,6 +198,7 @@ begin
   if FCurrentToolClass = nil then
     exit;
   FCurrentFigureIndex := AddFigure(FCurrentToolClass.GetFigureClass());
+  FCurrentToolClass.SetFigureParams(FCurrentFigureIndex);
   ToolBar.Enabled := False;
   FCurrentToolClass.Start(FCurrentFigureIndex, Point(X, Y));
   SetScrollBar();
@@ -262,8 +263,24 @@ begin
 end;
 
 procedure TMainForm.ToolsListSelectionChange(Sender: TObject; User: boolean);
+var
+  i: TParam;
+  l: TLabel;
 begin
   FCurrentToolClass := GetTool(ToolsList.ItemIndex);
-end;
+  ParamPanel.DestroyComponents;
+  for i in FCurrentToolClass.Params do
+  begin
+    ParamPanel.Visible := False;
+    i.ToControl(ParamPanel).Align := alBottom;
+    l := TLabel.Create(ParamPanel);
+    l.Parent := ParamPanel;
+    l.Caption := i.Name;
+    l.Align := alBottom;
+    ParamPanel.Visible := True;
+    Invalidate();
+	end;
+  end;
+
 
 end.

@@ -5,14 +5,18 @@ unit UTools;
 interface
 
 uses
-  Classes, SysUtils, UDraw, UScale, Controls;
+  Classes, SysUtils, UDraw, UScale, Controls, UParam;
 
 type
 
   { TBigTools }
 
   TBigTools = class
+  private
+    class function GetParams: TParamList; static; virtual;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); virtual; abstract;
+    class property Params: TParamList read GetParams;
     class function GetName(): string; virtual; abstract;
     class function GetFigureClass(): TCanvasFigure; virtual; abstract;
     class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); virtual;
@@ -24,7 +28,12 @@ type
   { TPencilTool }
 
   TPencilTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -34,7 +43,12 @@ type
   { TLineTool }
 
   TLineTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -44,7 +58,12 @@ type
   { TPolyLineTool }
 
   TPolyLineTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -54,7 +73,12 @@ type
   { TRectangleTool }
 
   TRectangleTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -64,7 +88,12 @@ type
   { TEllipseTool }
 
   TEllipseTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -74,7 +103,12 @@ type
   { TRndRectangleTool }
 
   TRndRectangleTool = class(TBigTools)
+  private
+    class var
+    FParams: TParamList;
+    class function GetParams: TParamList; static; override;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -85,6 +119,7 @@ type
 
   TZoomTool = class(TBigTools)
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function GetFigureClass(): TCanvasFigure; override;
@@ -99,6 +134,7 @@ type
     class var
     CanDraw: boolean;
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
@@ -111,6 +147,7 @@ type
 
   TSelectionTool = class(TBigTools)
   public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
     class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
@@ -143,6 +180,11 @@ begin
 end;
 
 { TSelectionTool }
+
+class procedure TSelectionTool.SetFigureParams(AFigureIndex: SizeInt);
+begin
+
+end;
 
 class function TSelectionTool.GetName: string;
 begin
@@ -180,6 +222,11 @@ begin
 end;
 
 { THandTool }
+
+class procedure THandTool.SetFigureParams(AFigureIndex: SizeInt);
+begin
+
+end;
 
 class procedure THandTool.Start(AFigureIndex: SizeInt; AXY: TPoint);
 begin
@@ -222,6 +269,11 @@ end;
 
 { TBigTools }
 
+class function TBigTools.GetParams: TParamList;
+begin
+  Result := nil;
+end;
+
 class procedure TBigTools.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
   with GetFigure(AFigureIndex) do
@@ -243,6 +295,11 @@ end;
 
 
 { TZoomTool }
+
+class procedure TZoomTool.SetFigureParams(AFigureIndex: SizeInt);
+begin
+
+end;
 
 class function TZoomTool.GetName: string;
 begin
@@ -293,6 +350,24 @@ end;
 
 { TRndRectangleTool }
 
+class function TRndRectangleTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TRndRectangleTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[2] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
+  FFigure.Radius := (FParams[5] as TRadiusParam).Value;
+end;
+
 class function TRndRectangleTool.GetName: string;
 begin
   Result := 'Круглый не круг';
@@ -318,6 +393,23 @@ begin
 end;
 
 { TEllipseTool }
+
+class function TEllipseTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TEllipseTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[2] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
+end;
 
 class function TEllipseTool.GetName: string;
 begin
@@ -345,6 +437,23 @@ end;
 
 { TRectangleTool }
 
+class function TRectangleTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TRectangleTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[2] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
+end;
+
 class function TRectangleTool.GetName: string;
 begin
   Result := 'Прямоугольник';
@@ -370,6 +479,21 @@ begin
 end;
 
 { TPolyLineTool }
+
+class function TPolyLineTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TPolyLineTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[1] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
+end;
 
 class function TPolyLineTool.GetName: string;
 begin
@@ -402,6 +526,21 @@ end;
 
 { TLineTool }
 
+class function TLineTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TLineTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[1] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
+end;
+
 class function TLineTool.GetName: string;
 begin
   Result := 'Линия';
@@ -426,6 +565,21 @@ begin
 end;
 
 { TPencilTool }
+
+class function TPencilTool.GetParams: TParamList;
+begin
+  Result := FParams;
+end;
+
+class procedure TPencilTool.SetFigureParams(AFigureIndex: SizeInt);
+var
+  FFigure: TBigFigureClass;
+begin
+  FFigure := GetFigure(AFigureIndex);
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
+  FFigure.Width := (FParams[1] as TWidthParam).Value;
+  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
+end;
 
 class function TPencilTool.GetName: string;
 begin
@@ -456,4 +610,26 @@ initialization
   ToolsClasses := TToolsArray.Create(TSelectionTool, THandTool,
     TZoomTool, TRndRectangleTool, TEllipseTool, TRectangleTool,
     TPolyLineTool, TLineTool, TPencilTool);
+
+  TPolyLineTool.FParams := TParamList.Create(TPenColorParam.Create,
+    TWidthParam.Create, TPenStyleParam.Create);
+
+  TLineTool.FParams := TParamList.Create(TPenColorParam.Create,
+    TWidthParam.Create, TPenStyleParam.Create);
+
+  TPencilTool.FParams := TParamList.Create(TPenColorParam.Create,
+    TWidthParam.Create, TPenStyleParam.Create);
+
+  TRectangleTool.FParams := TParamList.Create(TPenColorParam.Create,
+    TBrushColorParam.Create, TWidthParam.Create, TPenStyleParam.Create,
+    TBrushStyleParam.Create);
+
+  TEllipseTool.FParams := TParamList.Create(TPenColorParam.Create,
+    TBrushColorParam.Create, TWidthParam.Create, TPenStyleParam.Create,
+    TBrushStyleParam.Create);
+
+  TRndRectangleTool.FParams :=
+    TParamList.Create(TPenColorParam.Create, TBrushColorParam.Create,
+    TWidthParam.Create, TPenStyleParam.Create, TBrushStyleParam.Create,
+    TRadiusParam.Create);
 end.
