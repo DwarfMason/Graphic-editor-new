@@ -25,6 +25,7 @@ type
     FBrushColor: TColor;
     FRadius: integer;
   public
+    Pointed: boolean;
     selected: boolean;
     function PointsCount(): SizeInt;
     property Width: integer read FWidth write FWidth;
@@ -286,13 +287,26 @@ begin
 end;
 
 function TBigFigureClass.InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
+const eps = 10;
 var
   FigureTL, FigureBR: TFloatPoint;
+  diag:Double;
 begin
+  diag:=sqrt(sqr(SelectionBR.x-SelectionTL.x)+sqr(SelectionTL.y-SelectionBR.y));
   FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
   FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
+  If eps <= diag then begin
   Result := (SelectionTL.x <= FigureTL.x) and (SelectionTL.y <= FigureTL.y) and
     (SelectionBR.x >= FigureBR.x) and (SelectionBR.Y >= FigureBR.Y);
+  pointed:= false;
+  end
+  else
+  begin
+    Result := (SelectionTL.x >= FigureTL.x) and (SelectionTL.y >= FigureTL.y)
+    and
+    (SelectionTL.x <= FigureBR.x) and (SelectionTL.Y <= FigureBR.Y);
+    pointed:= true;
+  end;
 end;
 
 procedure TBigFigureClass.addPoint(AValue: TFloatPoint);
@@ -312,12 +326,22 @@ end;
 procedure TBigFigureClass.Draw(ACanvas: TCanvas);
 var
   counter: SizeInt;
+  i:SizeInt;
 begin
   ACanvas.Pen.Width := FWidth;
   ACanvas.Pen.Style := FPenStyle;
   ACanvas.Pen.Color := FPenColor;
+  If pointed = false then
   for Counter := 0 to FiguresCount() - 1 do
+    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
+    else begin
+    for Counter := 0 to FiguresCount() - 1 do begin
     GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
+    If GetFigure(Counter).selected then
+    For i:=0 to Counter-1 do
+    GetFigure(i).selected:=false;
+    end;
+    end;
 end;
 
 procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
@@ -380,9 +404,6 @@ begin
 end;
 
 begin
-  AMinCor.x := MaxInt;
-  AMinCor.y := MaxInt;
-  AMaxCor.x := 5 - MaxInt;
-  AMaxCor.y := 5 - MaxInt;
+ UnselectAll;
 end.
 

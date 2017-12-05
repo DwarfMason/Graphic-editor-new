@@ -195,6 +195,10 @@ procedure TMainForm.WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   SetBtn(Button);
+  if ((FCurrentToolClass) <> (TZoomTool)) and ((FCurrentToolClass) <> (TSelectionTool)) and
+  ((FCurrentToolClass) <> (THandTool))
+  then
+  UnSelectAll();
   if FCurrentToolClass = nil then
     exit;
   FCurrentFigureIndex := AddFigure(FCurrentToolClass.GetFigureClass());
