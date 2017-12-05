@@ -90,15 +90,9 @@ begin
 end;
 
 procedure TMainForm.SelectAllClick(Sender: TObject);
-var
-  i: SizeInt;
 begin
-  for i := 0 to FiguresCount() - 1 do
-  begin
-    GetFigure(i).selected := True;
-    invalidate;
-  end;
   PSelectAll();
+  invalidate;
 end;
 
 procedure TMainForm.ChangeBorders;
@@ -173,15 +167,9 @@ begin
 end;
 
 procedure TMainForm.DeselectClick(Sender: TObject);
-var
-  i: SizeInt;
 begin
-  for i := 0 to FiguresCount() - 1 do
-  begin
-    GetFigure(i).selected := False;
-    invalidate;
-  end;
   UnSelectAll();
+  invalidate;
 end;
 
 procedure TMainForm.DeleteBtnClick(Sender: TObject);
@@ -195,10 +183,9 @@ procedure TMainForm.WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   SetBtn(Button);
-  if ((FCurrentToolClass) <> (TZoomTool)) and ((FCurrentToolClass) <> (TSelectionTool)) and
-  ((FCurrentToolClass) <> (THandTool))
-  then
-  UnSelectAll();
+  if ((FCurrentToolClass) <> (TZoomTool)) and ((FCurrentToolClass) <>
+    (TSelectionTool)) and ((FCurrentToolClass) <> (THandTool)) then
+    UnSelectAll();
   if FCurrentToolClass = nil then
     exit;
   FCurrentFigureIndex := AddFigure(FCurrentToolClass.GetFigureClass());
@@ -283,8 +270,9 @@ begin
     l.Align := alBottom;
     ParamPanel.Visible := True;
     Invalidate();
-	end;
   end;
+end;
+
 
 
 end.

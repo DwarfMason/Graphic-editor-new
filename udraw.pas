@@ -25,7 +25,6 @@ type
     FBrushColor: TColor;
     FRadius: integer;
   public
-    Pointed: boolean;
     selected: boolean;
     function PointsCount(): SizeInt;
     property Width: integer read FWidth write FWidth;
@@ -101,12 +100,12 @@ procedure DeleteSelected();
 procedure PSelectAll();
 procedure UnSelectAll();
 
-
-implementation
-
 var
   FiguresData: array of TBigFigureClass;
   AMinCor, AMaxCor: TFloatPoint;
+  pointed: boolean;
+
+implementation
 
 procedure DeleteLastFigure(AIndex: SizeInt);
 begin
@@ -138,20 +137,31 @@ begin
 end;
 
 procedure PSelectAll;
+var
+  i: SizeInt;
 begin
   AMinCor.x := 5 - MaxInt;
   AMinCor.y := 5 - MaxInt;
   AMaxCor.x := MaxInt;
   AMaxCor.y := MaxInt;
-
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    GetFigure(i).selected := True;
+  end;
 end;
 
 procedure UnselectAll;
+var
+  i:SizeInt;
 begin
   AMinCor.x := MaxInt;
   AMinCor.y := MaxInt;
   AMaxCor.x := 5 - MaxInt;
   AMaxCor.y := 5 - MaxInt;
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    GetFigure(i).selected := False;
+  end;
 
 end;
 
@@ -271,25 +281,26 @@ begin
 end;
 
 function TBigFigureClass.InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
-const eps = 10;
+const
+  eps = 10;
 var
   FigureTL, FigureBR: TFloatPoint;
-  diag:Double;
+  diag: double;
 begin
-  diag:=sqrt(sqr(SelectionBR.x-SelectionTL.x)+sqr(SelectionTL.y-SelectionBR.y));
+  diag := sqrt(sqr(SelectionBR.x - SelectionTL.x) + sqr(SelectionTL.y - SelectionBR.y));
   FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
   FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
-  If eps <= diag then begin
-  Result := (SelectionTL.x <= FigureTL.x) and (SelectionTL.y <= FigureTL.y) and
-    (SelectionBR.x >= FigureBR.x) and (SelectionBR.Y >= FigureBR.Y);
-  pointed:= false;
+  if eps <= diag then
+  begin
+    Result := (SelectionTL.x <= FigureTL.x) and (SelectionTL.y <= FigureTL.y) and
+      (SelectionBR.x >= FigureBR.x) and (SelectionBR.Y >= FigureBR.Y);
+    pointed := False;
   end
   else
   begin
-    Result := (SelectionTL.x >= FigureTL.x) and (SelectionTL.y >= FigureTL.y)
-    and
-    (SelectionTL.x <= FigureBR.x) and (SelectionTL.Y <= FigureBR.Y);
-    pointed:= true;
+    Result := (SelectionTL.x >= FigureTL.x) and (SelectionTL.y >= FigureTL.y) and
+      (SelectionTL.x <= FigureBR.x) and (SelectionTL.Y <= FigureBR.Y);
+    pointed := True;
   end;
 end;
 
@@ -310,22 +321,11 @@ end;
 procedure TBigFigureClass.Draw(ACanvas: TCanvas);
 var
   counter: SizeInt;
-  i:SizeInt;
+  i: SizeInt;
 begin
   ACanvas.Pen.Width := FWidth;
   ACanvas.Pen.Style := FPenStyle;
   ACanvas.Pen.Color := FPenColor;
-  If pointed = false then
-  for Counter := 0 to FiguresCount() - 1 do
-    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
-    else begin
-    for Counter := 0 to FiguresCount() - 1 do begin
-    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-    If GetFigure(Counter).selected then
-    For i:=0 to Counter-1 do
-    GetFigure(i).selected:=false;
-    end;
-    end;
 end;
 
 procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
@@ -378,16 +378,23 @@ begin
     FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
     FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
     ACanvas.Pen.color := clBlue;
+    ACanvas.Pen.Width := 1;
+    ACanvas.Pen.Style := psClear;
+    ACanvas.Brush.Style := BsSolid;
+    ACanvas.Brush.Color := clBlack;
+    ACanvas.Rectangle(FigureTL.x - 5, FigureTL.y - 5, FigureTL.x + 5, FigureTL.y + 5);
+    ACanvas.Rectangle(FigureBR.x - 5, FigureBR.y - 5, FigureBR.x + 5, FigureBR.y + 5);
+    ACanvas.Pen.color := clBlue;
     ACanvas.Pen.Width := 2;
     ACanvas.Pen.Style := psDash;
     ACanvas.Brush.Style := BsClear;
     ACanvas.Rectangle(FigureTL.x - (FWidth div 2) - 3, FigureTL.y -
-      (FWidth div 2) - 3, FigureBR.x + (FWidth div 2) + 3, FigureBR.y + (FWidth div 2) + 3);
+      (FWidth div 2) - 3, FigureBR.x + (FWidth div 2) + 3, FigureBR.y +
+      (FWidth div 2) + 3);
   end;
 
 end;
 
 begin
- UnselectAll;
+  UnselectAll;
 end.
-

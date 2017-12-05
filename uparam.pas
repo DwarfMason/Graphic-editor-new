@@ -186,7 +186,7 @@ begin
     Pen.Width := 1;
     Brush.Style := FFillStyles[Index];
     if Index <> 1 then
-      Brush.color := clPurple;
+      Brush.color := clBlack;
     Rectangle(ARect.Left + 1, ARect.Top + 1, ARect.Right - 1, ARect.Bottom - 1);
   end;
 end;

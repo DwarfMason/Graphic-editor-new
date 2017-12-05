@@ -200,8 +200,23 @@ begin
 end;
 
 class function TSelectionTool.Finish(AFigureIndex: SizeInt): boolean;
+var
+  i:SizeInt;
+  Counter:SizeInt;
 begin
   Result := inherited Finish(AFigureIndex);
+    If not pointed then
+  for Counter := 0 to FiguresCount() - 1 do
+    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
+    else begin
+    for Counter := 0 to FiguresCount() - 1 do begin
+    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
+    If GetFigure(Counter).selected then
+    For i:=0 to Counter-1 do
+    GetFigure(i).selected:=false;
+    end;
+    end;
+
   DeleteLastFigure(AFigureIndex);
 
 end;
