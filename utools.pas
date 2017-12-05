@@ -55,21 +55,6 @@ type
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
   end;
 
-  { TPolyLineTool }
-
-  TPolyLineTool = class(TBigTools)
-  private
-    class var
-    FParams: TParamList;
-    class function GetParams: TParamList; static; override;
-  public
-    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
-    class function GetName(): string; override;
-    class function GetFigureClass(): TCanvasFigure; override;
-    class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
-    class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
-  end;
-
   { TRectangleTool }
 
   TRectangleTool = class(TBigTools)
@@ -478,52 +463,6 @@ begin
   Result := False;
 end;
 
-{ TPolyLineTool }
-
-class function TPolyLineTool.GetParams: TParamList;
-begin
-  Result := FParams;
-end;
-
-class procedure TPolyLineTool.SetFigureParams(AFigureIndex: SizeInt);
-var
-  FFigure: TBigFigureClass;
-begin
-  FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[1] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
-end;
-
-class function TPolyLineTool.GetName: string;
-begin
-  Result := 'Ломаная';
-end;
-
-class function TPolyLineTool.GetFigureClass: TCanvasFigure;
-begin
-  Result := TPolyLine;
-end;
-
-class function TPolyLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
-var
-  Figure: TBigFigureClass;
-begin
-  Result := inherited;
-  if not Result then
-    Exit;
-  Figure := GetFigure(AFigureIndex);
-  Figure.SetPoint(Figure.PointsCount() - 1, ScreenToWorld(AXY.x, AXY.y));
-end;
-
-class function TPolyLineTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
-begin
-  Result := AFigureIndex <> cFigureIndexInvalid;
-  if not Result then
-    Exit;
-  GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
-end;
-
 { TLineTool }
 
 class function TLineTool.GetParams: TParamList;
@@ -609,10 +548,7 @@ initialization
 
   ToolsClasses := TToolsArray.Create(TSelectionTool, THandTool,
     TZoomTool, TRndRectangleTool, TEllipseTool, TRectangleTool,
-    TPolyLineTool, TLineTool, TPencilTool);
-
-  TPolyLineTool.FParams := TParamList.Create(TPenColorParam.Create,
-    TWidthParam.Create, TPenStyleParam.Create);
+    TLineTool, TPencilTool);
 
   TLineTool.FParams := TParamList.Create(TPenColorParam.Create,
     TWidthParam.Create, TPenStyleParam.Create);

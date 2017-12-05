@@ -70,12 +70,6 @@ type
     procedure Draw(ACanvas: TCanvas); override;
   end;
 
-  { TPolyLine }
-
-  TPolyLine = class(TBigFigureClass)
-    procedure Draw(ACanvas: TCanvas); override;
-  end;
-
   { TRectangle }
 
   TRectangle = class(TBigFigureClass)
@@ -202,16 +196,6 @@ end;
 procedure FFigureNone.Draw(ACanvas: TCanvas);
 begin
 
-end;
-
-{ TPolyLine }
-
-procedure TPolyLine.Draw(ACanvas: TCanvas);
-var
-  counter: SizeInt;
-begin
-  inherited;
-  ACanvas.Polyline(GetCanvasPoints());
 end;
 
 { TEllipse }
