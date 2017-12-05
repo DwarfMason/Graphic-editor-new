@@ -205,8 +205,9 @@ var
   Counter:SizeInt;
 begin
   Result := inherited Finish(AFigureIndex);
+  DeleteLastFigure(AFigureIndex);
     If not pointed then
-  for Counter := 0 to FiguresCount() - 1 do
+    for Counter := 0 to FiguresCount() - 1 do
     GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
     else begin
     for Counter := 0 to FiguresCount() - 1 do begin
@@ -217,7 +218,6 @@ begin
     end;
     end;
 
-  DeleteLastFigure(AFigureIndex);
 
 end;
 

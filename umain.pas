@@ -231,11 +231,11 @@ var
 begin
   ZoomQ.Value := double(Zoom * 100);
   Workplace.canvas.Clear();
-  for i := 0 to FiguresCount() - 1 do
+  for i := 0 to FiguresCount() - 1 do begin
     GetFigure(i).Draw(WorkPlace.Canvas);
-
-  for i := 0 to FiguresCount() - 1 do
+     If GetFigure(i).selected then
     GetFigure(i).SelectionDraw(WorkPlace.Canvas);
+  end;
 end;
 
 procedure TMainForm.ZoomQChange(Sender: TObject);

@@ -371,29 +371,41 @@ end;
 
 procedure TBigFigureClass.SelectionDraw(ACanvas: TCanvas);
 var
+  i:Sizeint;
   FigureTL, FigureBR: TPoint;
 begin
-  if Selected then
-  begin
-    FigureTL := WorldToScreen(TopLeft.x, TopLeft.y);
-    FigureBR := WorldToScreen(BottomRight.x, BottomRight.y);
-    ACanvas.Pen.color := clBlue;
-    ACanvas.Pen.Width := 1;
-    ACanvas.Pen.Style := psClear;
-    ACanvas.Brush.Style := BsSolid;
-    ACanvas.Brush.Color := clBlack;
-    ACanvas.Rectangle(FigureTL.x - 5, FigureTL.y - 5, FigureTL.x + 5, FigureTL.y + 5);
-    ACanvas.Rectangle(FigureBR.x - 5, FigureBR.y - 5, FigureBR.x + 5, FigureBR.y + 5);
-    ACanvas.Pen.color := clBlue;
-    ACanvas.Pen.Width := 2;
-    ACanvas.Pen.Style := psDash;
-    ACanvas.Brush.Style := BsClear;
-    ACanvas.Rectangle(FigureTL.x - (FWidth div 2) - 3, FigureTL.y -
+  FigureTL:= Point(MaxInt,MaxInt);
+  FigureBR:= Point(5-MaxInt,5-MaxInt);
+  For i:= 0 to FiguresCount()-1 do begin
+    If (GetFigure(i).selected) and (GetFigure(i).TopLeft.x<FigureTL.x) then
+    FigureTL.x:=round(GetFigure(i).TopLeft.x);
+    If (GetFigure(i).selected) and (GetFigure(i).TopLeft.y<FigureTL.y) then
+    FigureTL.y:=Round(GetFigure(i).TopLeft.y);
+    If (GetFigure(i).selected) and (GetFigure(i).BottomRight.y>FigureBR.y) then
+    FigureBR.y:=Round(GetFigure(i).BottomRight.y);
+    If (GetFigure(i).selected) and (GetFigure(i).BottomRight.x>FigureBR.x) then
+    FigureBR.x:=Round(GetFigure(i).BottomRight.x);
+   end;
+    FigureTL := WorldToScreen(FigureTL.x, FigureTL.y);
+    FigureBR := WorldToScreen(FigureBR.x, FigureBR.y);
+    with ACanvas do begin
+    Pen.color := clBlue;
+    Pen.Width := 1;
+    Pen.Style := psClear;
+    Brush.Style := BsSolid;
+    Brush.Color := clBlack;
+    Rectangle(FigureTL.x - 5, FigureTL.y - 5, FigureTL.x + 5, FigureTL.y + 5);
+    Rectangle(FigureBR.x - 5, FigureBR.y - 5, FigureBR.x + 5, FigureBR.y + 5);
+    Pen.color := clBlue;
+    Pen.Width := 2;
+    Pen.Style := psDash;
+    Brush.Style := BsClear;
+    Rectangle(FigureTL.x - (FWidth div 2) - 3, FigureTL.y -
       (FWidth div 2) - 3, FigureBR.x + (FWidth div 2) + 3, FigureBR.y +
       (FWidth div 2) + 3);
-  end;
 
-end;
+    end;
+  end;
 
 begin
   UnselectAll;
