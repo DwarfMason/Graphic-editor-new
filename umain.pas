@@ -245,10 +245,11 @@ var
 begin
   ZoomQ.Value := double(Zoom * 100);
   Workplace.canvas.Clear();
-  for i := 0 to FiguresCount() - 1 do begin
+  for i := 0 to FiguresCount() - 1 do
+  begin
     GetFigure(i).Draw(WorkPlace.Canvas);
-     If GetFigure(i).selected then
-    GetFigure(i).SelectionDraw(WorkPlace.Canvas);
+    if GetFigure(i).selected then
+      GetFigure(i).SelectionDraw(WorkPlace.Canvas);
   end;
 end;
 

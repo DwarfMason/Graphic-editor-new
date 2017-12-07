@@ -42,6 +42,7 @@ type
     function TopLeft(): TFloatPoint;
     function BottomRight(): TFloatPoint;
     procedure SelectionDraw(ACanvas: TCanvas);
+    procedure MoveFigure(dx, dy: extended);
   end;
 
 
@@ -106,6 +107,7 @@ var
   FiguresData: array of TBigFigureClass;
   AMinCor, AMaxCor: TFloatPoint;
   pointed: boolean;
+  SelectionTopLeft, SelectionBottomRight: TPoint;
 
 implementation
 
@@ -154,7 +156,7 @@ end;
 
 procedure UnselectAll;
 var
-  i:SizeInt;
+  i: SizeInt;
 begin
   AMinCor.x := MaxInt;
   AMinCor.y := MaxInt;
@@ -169,34 +171,34 @@ end;
 
 procedure MoveUp;
 var
-i: SizeInt;
-t: TBigFigureClass;
+  i: SizeInt;
+  t: TBigFigureClass;
 begin
-for i := High(FiguresData) downto Low(FiguresData) do
-begin
-if FiguresData[i].Selected and (i + 1 < Length(FiguresData)) then
-begin
-t := FiguresData[i + 1];
-FiguresData[i + 1] := FiguresData[i];
-FiguresData[i] := t;
-end;
-end;
+  for i := High(FiguresData) downto Low(FiguresData) do
+  begin
+    if FiguresData[i].Selected and (i + 1 < Length(FiguresData)) then
+    begin
+      t := FiguresData[i + 1];
+      FiguresData[i + 1] := FiguresData[i];
+      FiguresData[i] := t;
+    end;
+  end;
 end;
 
 procedure MoveDown;
 var
-i: SizeInt;
-t: TBigFigureClass;
+  i: SizeInt;
+  t: TBigFigureClass;
 begin
-for i := Low(FiguresData) to High(FiguresData) do
-begin
-if FiguresData[i].Selected and (i - 1 >= 0) then
-begin
-t := FiguresData[i - 1];
-FiguresData[i - 1] := FiguresData[i];
-FiguresData[i] := t;
-end;
-end;
+  for i := Low(FiguresData) to High(FiguresData) do
+  begin
+    if FiguresData[i].Selected and (i - 1 >= 0) then
+    begin
+      t := FiguresData[i - 1];
+      FiguresData[i - 1] := FiguresData[i];
+      FiguresData[i] := t;
+    end;
+  end;
 end;
 
 function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
@@ -404,54 +406,74 @@ begin
 end;
 
 procedure TBigFigureClass.SelectionDraw(ACanvas: TCanvas);
+const
+  PADDING = 5;
 var
-  i:Sizeint;
+  i: Sizeint;
   FigureTL, FigureBR, AllFiguresTL, AllFiguresBR: TPoint;
-  AnchorPoint:TPoint;
+  AnchorPoint: TPoint;
 begin
-  FigureTL:= TopLeft;
-  FigureBR:= BottomRight;
-  AllFiguresTL:=Point(MaxInt, MaxInt);
-  AllFiguresBR:=Point(5-MaxInt, 5-MaxInt);
-  For i:= 0 to FiguresCount()-1 do begin
-    If (GetFigure(i).selected) and (GetFigure(i).TopLeft.x<AllFiguresTL.x) then
-    AllFiguresTL.x:=round(GetFigure(i).TopLeft.x);
-    If (GetFigure(i).selected) and (GetFigure(i).TopLeft.y<AllFiguresTL.y) then
-    AllFiguresTL.y:=Round(GetFigure(i).TopLeft.y);
-    If (GetFigure(i).selected) and (GetFigure(i).BottomRight.y>AllFiguresBR.y) then
-    AllFiguresBR.y:=Round(GetFigure(i).BottomRight.y);
-    If (GetFigure(i).selected) and (GetFigure(i).BottomRight.x>AllFiguresBR.x) then
-    AllFiguresBR.x:=Round(GetFigure(i).BottomRight.x);
-   end;
-    AllFiguresTL := WorldToScreen(AllFiguresTL.x, AllFiguresTL.y);
-    AllFiguresBR := WorldToScreen(AllFiguresBR.x, AllFiguresBr.y);
-    FigureTL := WorldToScreen(FigureTL.x, FigureTL.y);
-    FigureBR := WorldToScreen(FigureBR.x, FigureBR.y);
-    with ACanvas do begin
+  FigureTL := TopLeft;
+  FigureBR := BottomRight;
+  AllFiguresTL := Point(MaxInt, MaxInt);
+  AllFiguresBR := Point(5 - MaxInt, 5 - MaxInt);
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    if (GetFigure(i).selected) and (GetFigure(i).TopLeft.x < AllFiguresTL.x) then
+      AllFiguresTL.x := round(GetFigure(i).TopLeft.x);
+    if (GetFigure(i).selected) and (GetFigure(i).TopLeft.y < AllFiguresTL.y) then
+      AllFiguresTL.y := Round(GetFigure(i).TopLeft.y);
+    if (GetFigure(i).selected) and (GetFigure(i).BottomRight.y > AllFiguresBR.y) then
+      AllFiguresBR.y := Round(GetFigure(i).BottomRight.y);
+    if (GetFigure(i).selected) and (GetFigure(i).BottomRight.x > AllFiguresBR.x) then
+      AllFiguresBR.x := Round(GetFigure(i).BottomRight.x);
+  end;
+  AllFiguresTL := WorldToScreen(AllFiguresTL.x, AllFiguresTL.y);
+  AllFiguresBR := WorldToScreen(AllFiguresBR.x, AllFiguresBr.y);
+  FigureTL := WorldToScreen(FigureTL.x, FigureTL.y);
+  FigureBR := WorldToScreen(FigureBR.x, FigureBR.y);
+  with ACanvas do
+  begin
     Pen.color := clBlue;
     Pen.Width := 1;
     Pen.Style := psClear;
     Brush.Style := BsSolid;
     Brush.Color := clBlack;
-    Rectangle(FigureTL.x - 5, FigureTL.y - 5, FigureTL.x + 5, FigureTL.y + 5);
-    Rectangle(FigureBR.x - 5, FigureBR.y - 5, FigureBR.x + 5, FigureBR.y + 5);
-    For i:= low(FPoints) to High(FPoints) do begin
-    AnchorPoint:=WorldToScreen(FPoints[i].x, FPoints[i].y);
-    Rectangle(AnchorPoint.x - 5, AnchorPoint.y - 5, AnchorPoint.x + 5, AnchorPoint.y + 5);
+    Rectangle(FigureTL.x - PADDING, FigureTL.y - PADDING, FigureTL.x +
+      PADDING, FigureTL.y + PADDING);
+    Rectangle(FigureBR.x - PADDING, FigureBR.y - PADDING, FigureBR.x +
+      PADDING, FigureBR.y + PADDING);
+    for i := low(FPoints) to High(FPoints) do
+    begin
+      AnchorPoint := WorldToScreen(FPoints[i].x, FPoints[i].y);
+      Rectangle(AnchorPoint.x - PADDING, AnchorPoint.y - PADDING,
+        AnchorPoint.x + PADDING, AnchorPoint.y + PADDING);
     end;
     Pen.color := clBlue;
     Pen.Width := 2;
     Pen.Style := psDash;
     Brush.Style := BsClear;
-    Rectangle(FigureTL.x - (FWidth div 2) - 3, FigureTL.y -
-      (FWidth div 2) - 3, FigureBR.x + (FWidth div 2) + 3, FigureBR.y +
-      (FWidth div 2) + 3);
-    Rectangle(AllFiguresTL.x - (FWidth div 2) - 3, AllFiguresTL.y -
-      (FWidth div 2) - 3, AllFiguresBR.x + (FWidth div 2) + 3, AllFiguresBR.y +
-      (FWidth div 2) + 3);
-
-    end;
+    Rectangle(FigureTL.x - (FWidth div 2) - PADDING, FigureTL.y -
+      (FWidth div 2) - PADDING, FigureBR.x + (FWidth div 2) + PADDING,
+      FigureBR.y + (FWidth div 2) + PADDING);
+    Rectangle(AllFiguresTL.x - (FWidth div 2) - PADDING, AllFiguresTL.y -
+      (FWidth div 2) - PADDING, AllFiguresBR.x + (FWidth div 2) +
+      PADDING, AllFiguresBR.y + (FWidth div 2) + PADDING);
   end;
+  SelectionBottomRight := AllFiguresBR;
+  SelectionTopLeft := AllFiguresTL;
+end;
+
+procedure TBigFigureClass.MoveFigure(dx, dy: extended);
+var
+  i: SizeInt;
+begin
+  for i := low(FPoints) to High(FPoints) do
+  begin
+    FPoints[i].x := FPoints[i].x + dx;
+    FPoints[i].y := FPoints[i].y + dy;
+  end;
+end;
 
 begin
   UnselectAll;
