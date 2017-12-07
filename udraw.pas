@@ -144,10 +144,6 @@ procedure PSelectAll;
 var
   i: SizeInt;
 begin
-  AMinCor.x := 5 - MaxInt;
-  AMinCor.y := 5 - MaxInt;
-  AMaxCor.x := MaxInt;
-  AMaxCor.y := MaxInt;
   for i := 0 to FiguresCount() - 1 do
   begin
     GetFigure(i).selected := True;
@@ -158,16 +154,11 @@ procedure UnselectAll;
 var
   i: SizeInt;
 begin
-  AMinCor.x := MaxInt;
-  AMinCor.y := MaxInt;
-  AMaxCor.x := 5 - MaxInt;
-  AMaxCor.y := 5 - MaxInt;
   for i := 0 to FiguresCount() - 1 do
   begin
     GetFigure(i).selected := False;
   end;
-
-end;
+     end;
 
 procedure MoveUp;
 var
@@ -434,20 +425,19 @@ begin
   FigureBR := WorldToScreen(FigureBR.x, FigureBR.y);
   with ACanvas do
   begin
-    Pen.color := clBlue;
-    Pen.Width := 1;
-    Pen.Style := psClear;
+    Pen.color := clBlack;
+    Pen.Width := 2;
     Brush.Style := BsSolid;
-    Brush.Color := clBlack;
-    Rectangle(FigureTL.x - PADDING, FigureTL.y - PADDING, FigureTL.x +
-      PADDING, FigureTL.y + PADDING);
-    Rectangle(FigureBR.x - PADDING, FigureBR.y - PADDING, FigureBR.x +
-      PADDING, FigureBR.y + PADDING);
+    Brush.Color := clWhite;
     for i := low(FPoints) to High(FPoints) do
     begin
       AnchorPoint := WorldToScreen(FPoints[i].x, FPoints[i].y);
       Rectangle(AnchorPoint.x - PADDING, AnchorPoint.y - PADDING,
         AnchorPoint.x + PADDING, AnchorPoint.y + PADDING);
+          Rectangle(AllFiguresTL.x - PADDING, AllFiguresTL.y - PADDING,
+        AllFiguresTL.x + PADDING, AllFiguresTL.y + PADDING);
+  Rectangle(AllFiguresBR.x - PADDING, AllFiguresBR.y - PADDING,
+        AllFiguresBR.x + PADDING, AllFiguresBR.y + PADDING);
     end;
     Pen.color := clBlue;
     Pen.Width := 2;
@@ -462,6 +452,7 @@ begin
   end;
   SelectionBottomRight := AllFiguresBR;
   SelectionTopLeft := AllFiguresTL;
+
 end;
 
 procedure TBigFigureClass.MoveFigure(dx, dy: extended);

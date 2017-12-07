@@ -35,6 +35,7 @@ type
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -51,6 +52,7 @@ type
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
   end;
@@ -65,6 +67,7 @@ type
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function GetFigureClass(): TCanvasFigure; override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
@@ -81,6 +84,7 @@ type
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
   end;
@@ -96,6 +100,7 @@ type
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class function GetName(): string; override;
     class function GetFigureClass(): TCanvasFigure; override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: Tpoint); override;
     class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
     class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
   end;
@@ -141,6 +146,22 @@ type
     class function Finish(AFigureIndex: SizeInt): boolean; override;
   end;
 
+  { TClickTool }
+
+  TClickTool = class(TBigTools)
+    class var
+    StartX, StartY: double;
+    IsDraggable: boolean;
+  public
+    class procedure SetFigureParams(AFigureIndex: SizeInt); override;
+    class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
+    class function GetName(): string; override;
+    class function GetFigureClass(): TCanvasFigure; override;
+    class function Update(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Step(AFigureIndex: SizeInt; AXY: TPoint): boolean; override;
+    class function Finish(AFigureIndex: SizeInt): boolean; override;
+  end;
+
 
 
   TTools = class of TBigTools;
@@ -162,6 +183,65 @@ var
 procedure SetBtn(Button: TMouseButton);
 begin
   MBtn := Button;
+end;
+
+{ TClickTool }
+
+class procedure TClickTool.SetFigureParams(AFigureIndex: SizeInt);
+begin
+
+end;
+
+class procedure TClickTool.Start(AFigureIndex: SizeInt; AXY: TPoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  if (SelectionTopLeft.x <= AXY.x) and (SelectionTopLeft.y <= AXY.y) and
+    (SelectionBottomRight.x >= AXY.x) and (SelectionBottomRight.y >= AXY.y) then
+  begin
+    IsDraggable := True;
+    StartX := AXY.x;
+    StartY := AXY.y;
+  end;
+end;
+
+class function TClickTool.GetName: string;
+begin
+  Result := 'Курсор';
+end;
+
+class function TClickTool.GetFigureClass: TCanvasFigure;
+begin
+  Result := FFigureNone;
+end;
+
+class function TClickTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+var
+  t: TBigFigureClass;
+  i: SizeInt;
+begin
+  Result := True;
+  if IsDraggable then
+    for i := 0 to FiguresCount() - 1 do
+    begin
+      if GetFigure(i).selected then
+      begin
+        GetFigure(i).MoveFigure(AXY.x - StartX, AXY.y - StartY);
+      end;
+    end;
+  StartX := AXY.x;
+  StartY := AXY.y;
+end;
+
+class function TClickTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
+begin
+  Result := False;
+end;
+
+class function TClickTool.Finish(AFigureIndex: SizeInt): boolean;
+begin
+  Result := inherited Finish(AFigureIndex);
+  IsDraggable := False;
+  DeleteLastFigure(AFigureIndex);
 end;
 
 { TSelectionTool }
@@ -201,23 +281,24 @@ end;
 
 class function TSelectionTool.Finish(AFigureIndex: SizeInt): boolean;
 var
-  i:SizeInt;
-  Counter:SizeInt;
+  i: SizeInt;
+  Counter: SizeInt;
 begin
   Result := inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
-    If not pointed then
+  if not pointed then
     for Counter := 0 to FiguresCount() - 1 do
-    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
-    else begin
-    for Counter := 0 to FiguresCount() - 1 do begin
-    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
-    If GetFigure(Counter).selected then
-    For i:=0 to Counter-1 do
-    GetFigure(i).selected:=false;
+      GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
+  else
+  begin
+    for Counter := 0 to FiguresCount() - 1 do
+    begin
+      GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
+      if GetFigure(Counter).selected then
+        for i := 0 to Counter - 1 do
+          GetFigure(i).selected := False;
     end;
-    end;
-
+  end;
 
 end;
 
@@ -292,7 +373,6 @@ class function TBigTools.Finish(AFigureIndex: SizeInt): boolean;
 begin
   Result := AFigureIndex <> cFigureIndexInvalid;
 end;
-
 
 { TZoomTool }
 
@@ -378,13 +458,18 @@ begin
   Result := TRndRectangle;
 end;
 
+class procedure TRndRectangleTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
+end;
+
 class function TRndRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
-
 end;
 
 class function TRndRectangleTool.Step(AFigureIndex: SizeInt; AXY: TPoint): boolean;
@@ -421,10 +506,15 @@ begin
   Result := TEllipse;
 end;
 
+class procedure TEllipseTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
+end;
+
 class function TEllipseTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
-  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -460,6 +550,12 @@ begin
   Result := 'Прямоугольник';
 end;
 
+class procedure TRectangleTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
+end;
+
 class function TRectangleTool.GetFigureClass: TCanvasFigure;
 begin
   Result := TRectangle;
@@ -468,7 +564,6 @@ end;
 class function TRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
-  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -507,10 +602,15 @@ begin
   Result := TLine;
 end;
 
+class procedure TLineTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
+end;
+
 class function TLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
-  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -543,6 +643,12 @@ begin
   Result := 'Карандаш';
 end;
 
+class procedure TPencilTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
+begin
+  inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
+end;
+
 class function TPencilTool.GetFigureClass: TCanvasFigure;
 begin
   Result := TPencil;
@@ -551,7 +657,6 @@ end;
 class function TPencilTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
-  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
@@ -565,8 +670,8 @@ end;
 
 initialization
 
-  ToolsClasses := TToolsArray.Create(TSelectionTool, THandTool,
-    TZoomTool, TRndRectangleTool, TEllipseTool, TRectangleTool,
+  ToolsClasses := TToolsArray.Create(TClickTool, TSelectionTool,
+    THandTool, TZoomTool, TRndRectangleTool, TEllipseTool, TRectangleTool,
     TLineTool, TPencilTool);
 
   TLineTool.FParams := TParamList.Create(TPenColorParam.Create,
@@ -587,4 +692,5 @@ initialization
     TParamList.Create(TPenColorParam.Create, TBrushColorParam.Create,
     TWidthParam.Create, TPenStyleParam.Create, TBrushStyleParam.Create,
     TRadiusParam.Create);
+
 end.
