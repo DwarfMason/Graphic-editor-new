@@ -407,6 +407,7 @@ procedure TBigFigureClass.SelectionDraw(ACanvas: TCanvas);
 var
   i:Sizeint;
   FigureTL, FigureBR, AllFiguresTL, AllFiguresBR: TPoint;
+  AnchorPoint:TPoint;
 begin
   FigureTL:= TopLeft;
   FigureBR:= BottomRight;
@@ -434,6 +435,10 @@ begin
     Brush.Color := clBlack;
     Rectangle(FigureTL.x - 5, FigureTL.y - 5, FigureTL.x + 5, FigureTL.y + 5);
     Rectangle(FigureBR.x - 5, FigureBR.y - 5, FigureBR.x + 5, FigureBR.y + 5);
+    For i:= low(FPoints) to High(FPoints) do begin
+    AnchorPoint:=WorldToScreen(FPoints[i].x, FPoints[i].y);
+    Rectangle(AnchorPoint.x - 5, AnchorPoint.y - 5, AnchorPoint.x + 5, AnchorPoint.y + 5);
+    end;
     Pen.color := clBlue;
     Pen.Width := 2;
     Pen.Style := psDash;
