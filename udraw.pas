@@ -42,7 +42,8 @@ type
     function TopLeft(): TFloatPoint;
     function BottomRight(): TFloatPoint;
     procedure SelectionDraw(ACanvas: TCanvas);
-    procedure MoveFigure(dx, dy: extended);
+    procedure MoveFigure(dX, dY: extended);
+    procedure ResizeFigure(APointIndex: SizeInt; dX, dY: extended);
   end;
 
 
@@ -440,30 +441,35 @@ begin
         AllFiguresBR.x + PADDING, AllFiguresBR.y + PADDING);
     end;
     Pen.color := clBlue;
-    Pen.Width := 2;
+    Pen.Width := 3;
     Pen.Style := psDash;
     Brush.Style := BsClear;
-    Rectangle(FigureTL.x - (FWidth div 2) - PADDING, FigureTL.y -
-      (FWidth div 2) - PADDING, FigureBR.x + (FWidth div 2) + PADDING,
-      FigureBR.y + (FWidth div 2) + PADDING);
-    Rectangle(AllFiguresTL.x - (FWidth div 2) - PADDING, AllFiguresTL.y -
-      (FWidth div 2) - PADDING, AllFiguresBR.x + (FWidth div 2) +
-      PADDING, AllFiguresBR.y + (FWidth div 2) + PADDING);
+    Rectangle(FigureTL.x - (FWidth div 2), FigureTL.y -
+      (FWidth div 2), FigureBR.x + (FWidth div 2),
+      FigureBR.y + (FWidth div 2));
+    Rectangle(AllFiguresTL.x - (FWidth div 2), AllFiguresTL.y -
+    (FWidth div 2), AllFiguresBR.x + (FWidth div 2), AllFiguresBR.y + (FWidth div 2));
   end;
   SelectionBottomRight := AllFiguresBR;
   SelectionTopLeft := AllFiguresTL;
-
 end;
 
-procedure TBigFigureClass.MoveFigure(dx, dy: extended);
+procedure TBigFigureClass.MoveFigure(dX, dY: extended);
 var
   i: SizeInt;
 begin
-  for i := low(FPoints) to High(FPoints) do
+  for i := Low(FPoints) to High(FPoints) do
   begin
     FPoints[i].x := FPoints[i].x + dx;
     FPoints[i].y := FPoints[i].y + dy;
   end;
+end;
+
+procedure TBigFigureClass.ResizeFigure(APointIndex: SizeInt; dX,
+  dY: extended);
+begin
+  FPoints[APointIndex].x:=FPoints[APointIndex].x+dx;
+  FPoints[APointIndex].y:=FPoints[APointIndex].y+dy;
 end;
 
 begin

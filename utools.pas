@@ -152,6 +152,9 @@ type
     class var
     StartX, StartY: double;
     IsDraggable: boolean;
+    IsResizable:boolean;
+    FigureIndex: SizeInt;
+    AnchorIndex: SizeInt;
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
@@ -193,14 +196,34 @@ begin
 end;
 
 class procedure TClickTool.Start(AFigureIndex: SizeInt; AXY: TPoint);
+const
+  PADDING=5;
+var
+  i,j:SizeInt;
+  ScaleResize:TPoint;
 begin
   inherited Start(AFigureIndex, AXY);
   if (SelectionTopLeft.x <= AXY.x) and (SelectionTopLeft.y <= AXY.y) and
     (SelectionBottomRight.x >= AXY.x) and (SelectionBottomRight.y >= AXY.y) then
   begin
     IsDraggable := True;
-    StartX := AXY.x;
-    StartY := AXY.y;
+      StartX := AXY.x;
+      StartY := AXY.y;
+  end;
+  For i:=0 to FiguresCount()-1 do begin
+    If GetFigure(i).selected then
+    For j:=Low(GetFigure(i).FPoints) to High(GetFigure(i).FPoints) do begin
+      ScaleResize:=WorldToScreen(GetFigure(i).FPoints[j].x,GetFigure(i).FPoints[j].y);
+      If (ScaleResize.x - PADDING < AXY.x) and
+        (ScaleResize.x + PADDING > AXY.x) and
+        (ScaleResize.y - PADDING < AXY.y) and
+        (ScaleResize.y + PADDING > AXY.y) then begin
+        FigureIndex:= i;
+        AnchorIndex:= j;
+        IsResizable := True;
+        IsDraggable := False;
+        end;
+    end;
   end;
 end;
 
@@ -216,7 +239,7 @@ end;
 
 class function TClickTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 var
-  t: TBigFigureClass;
+
   i: SizeInt;
 begin
   Result := True;
@@ -228,6 +251,8 @@ begin
         GetFigure(i).MoveFigure(AXY.x - StartX, AXY.y - StartY);
       end;
     end;
+  If IsResizable then
+  GetFigure(FigureIndex).ResizeFigure(AnchorIndex, AXY.x - StartX, AXY.y - StartY);
   StartX := AXY.x;
   StartY := AXY.y;
 end;
@@ -241,6 +266,7 @@ class function TClickTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
   Result := inherited Finish(AFigureIndex);
   IsDraggable := False;
+  IsResizable:=False;
   DeleteLastFigure(AFigureIndex);
 end;
 
