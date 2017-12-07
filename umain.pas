@@ -20,6 +20,9 @@ type
     HelpMenu: TMenuItem;
     MenuItem1: TMenuItem;
     DeleteBtn: TMenuItem;
+    NoneSpace: TMenuItem;
+    MoveUpBtn: TMenuItem;
+    MoveDownBtn: TMenuItem;
     ParamPanel: TPanel;
     SelectAll: TMenuItem;
     Deselect: TMenuItem;
@@ -34,7 +37,9 @@ type
     procedure DeselectClick(Sender: TObject);
     procedure ExitBtnClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure MoveDownBtnClick(Sender: TObject);
     procedure HelpMenuClick(Sender: TObject);
+    procedure MoveUpBtnClick(Sender: TObject);
     procedure SelectAllClick(Sender: TObject);
     procedure ToolsListSelectionChange(Sender: TObject; User: boolean);
     procedure WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
@@ -84,9 +89,21 @@ begin
   workplace.canvas.Brush.color := clWhite;
 end;
 
+procedure TMainForm.MoveDownBtnClick(Sender: TObject);
+begin
+  MoveDown();
+  invalidate;
+end;
+
 procedure TMainForm.HelpMenuClick(Sender: TObject);
 begin
   ShowMessage('Работа выполнена студентом 1 курса, Балашенко Игорем Евгеньевичем');
+end;
+
+procedure TMainForm.MoveUpBtnClick(Sender: TObject);
+begin
+  MoveUp();
+  invalidate;
 end;
 
 procedure TMainForm.SelectAllClick(Sender: TObject);
@@ -183,9 +200,6 @@ procedure TMainForm.WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   SetBtn(Button);
-  if ((FCurrentToolClass) <> (TZoomTool)) and ((FCurrentToolClass) <>
-    (TSelectionTool)) and ((FCurrentToolClass) <> (THandTool)) then
-    UnSelectAll();
   if FCurrentToolClass = nil then
     exit;
   FCurrentFigureIndex := AddFigure(FCurrentToolClass.GetFigureClass());

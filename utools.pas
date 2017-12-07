@@ -424,6 +424,7 @@ end;
 class function TEllipseTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
+  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -467,6 +468,7 @@ end;
 class function TRectangleTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
+  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -508,6 +510,7 @@ end;
 class function TLineTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
+  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).SetPoint(1, ScreenToWorld(AXY.x, AXY.y));
@@ -548,6 +551,7 @@ end;
 class function TPencilTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 begin
   Result := inherited;
+  UnSelectAll();
   if not Result then
     Exit;
   GetFigure(AFigureIndex).AddPoint(ScreenToWorld(AXY.x, AXY.y));
