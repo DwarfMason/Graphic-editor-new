@@ -44,6 +44,8 @@ type
     procedure SelectionDraw(ACanvas: TCanvas);
     procedure MoveFigure(dX, dY: extended);
     procedure ResizeFigure(APointIndex: SizeInt; dX, dY: extended);
+    procedure WideResizeL(dX, dY: extended);
+    procedure WideResizeR(dX, dY: extended);
   end;
 
 
@@ -435,10 +437,10 @@ begin
       AnchorPoint := WorldToScreen(FPoints[i].x, FPoints[i].y);
       Rectangle(AnchorPoint.x - PADDING, AnchorPoint.y - PADDING,
         AnchorPoint.x + PADDING, AnchorPoint.y + PADDING);
-          Rectangle(AllFiguresTL.x - PADDING, AllFiguresTL.y - PADDING,
-        AllFiguresTL.x + PADDING, AllFiguresTL.y + PADDING);
-  Rectangle(AllFiguresBR.x - PADDING, AllFiguresBR.y - PADDING,
-        AllFiguresBR.x + PADDING, AllFiguresBR.y + PADDING);
+          Rectangle(AllFiguresTL.x - 2*PADDING, AllFiguresTL.y - 2*PADDING,
+        AllFiguresTL.x, AllFiguresTL.y);
+  Rectangle(AllFiguresBR.x, AllFiguresBR.y,
+        AllFiguresBR.x + 2*PADDING, AllFiguresBR.y + 2*PADDING);
     end;
     Pen.color := clBlue;
     Pen.Width := 3;
@@ -447,8 +449,8 @@ begin
     Rectangle(FigureTL.x - (FWidth div 2), FigureTL.y -
       (FWidth div 2), FigureBR.x + (FWidth div 2),
       FigureBR.y + (FWidth div 2));
-    Rectangle(AllFiguresTL.x - (FWidth div 2), AllFiguresTL.y -
-    (FWidth div 2), AllFiguresBR.x + (FWidth div 2), AllFiguresBR.y + (FWidth div 2));
+    Rectangle(AllFiguresTL.x - (FWidth div 2) - PADDING, AllFiguresTL.y - PADDING -
+    (FWidth div 2), AllFiguresBR.x + (FWidth div 2) + PADDING, AllFiguresBR.y + PADDING + (FWidth div 2));
   end;
   SelectionBottomRight := AllFiguresBR;
   SelectionTopLeft := AllFiguresTL;
@@ -470,6 +472,28 @@ procedure TBigFigureClass.ResizeFigure(APointIndex: SizeInt; dX,
 begin
   FPoints[APointIndex].x:=FPoints[APointIndex].x+dx;
   FPoints[APointIndex].y:=FPoints[APointIndex].y+dy;
+end;
+
+procedure TBigFigureClass.WideResizeL(dX, dY: extended);
+var
+  i:SizeInt;
+begin
+  for i := Low(FPoints) to High(FPoints) do
+  begin
+    FPoints[i].x:=FPoints[i].x +dx*(FPoints[i].x-SelectionBottomRight.x)/(SelectionTopLeft.x-SelectionBottomRight.x);
+    FPoints[i].y:=FPoints[i].y +dy*(FPoints[i].y-SelectionBottomRight.y)/(SelectionTopLeft.y-SelectionBottomRight.y);
+  end;
+end;
+
+procedure TBigFigureClass.WideResizeR(dX, dY: extended);
+var
+  i:SizeInt;
+begin
+  for i := Low(FPoints) to High(FPoints) do
+  begin
+    FPoints[i].x:=FPoints[i].x +dx*(FPoints[i].x-SelectionTopLeft.x)/(SelectionBottomRight.x-SelectionTopLeft.x);
+    FPoints[i].y:=FPoints[i].y +dy*(FPoints[i].y-SelectionTopLeft.y)/(SelectionBottomRight.y-SelectionTopLeft.y);
+  end;
 end;
 
 begin

@@ -153,6 +153,8 @@ type
     StartX, StartY: double;
     IsDraggable: boolean;
     IsResizable:boolean;
+    IsWideResizableLeft:boolean;
+    IsWideResizableRight:boolean;
     FigureIndex: SizeInt;
     AnchorIndex: SizeInt;
   public
@@ -225,6 +227,21 @@ begin
         end;
     end;
   end;
+  If (SelectionTopLeft.x - 2*PADDING <= AXY.x) and (SelectionTopLeft.y - 2*PADDING <= AXY.y) and
+    (SelectionTopLeft.x >= AXY.x) and (SelectionTopLeft.y >= AXY.y) then begin
+     IsWideResizableLeft:=True;
+     IsResizable := False;
+     IsDraggable := False;
+     IsWideResizableRight:=False;
+    end;
+  If (SelectionBottomRight.x <= AXY.x) and (SelectionBottomRight.y <= AXY.y) and
+    (SelectionBottomRight.x + 2*PADDING >= AXY.x) and (SelectionBottomRight.y + 2*PADDING >= AXY.y) then begin
+     IsWideResizableLeft:=False;
+     IsResizable := False;
+     IsDraggable := False;
+     IsWideResizableRight:=True;
+    end;
+
 end;
 
 class function TClickTool.GetName: string;
@@ -239,7 +256,6 @@ end;
 
 class function TClickTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
 var
-
   i: SizeInt;
 begin
   Result := True;
@@ -252,7 +268,23 @@ begin
       end;
     end;
   If IsResizable then
-  GetFigure(FigureIndex).ResizeFigure(AnchorIndex, AXY.x - StartX, AXY.y - StartY);
+  GetFigure(FigureIndex).ResizeFigure(AnchorIndex, AXY.x - StartX, AXY.y - StartY );
+  if IsWideResizableLeft then
+    for i := 0 to FiguresCount() - 1 do
+    begin
+      if GetFigure(i).selected then
+      begin
+        GetFigure(i).WideResizeL(AXY.x - StartX, AXY.y - StartY);
+      end;
+    end;
+  if IsWideResizableRight then
+    for i := 0 to FiguresCount() - 1 do
+    begin
+      if GetFigure(i).selected then
+      begin
+        GetFigure(i).WideResizeR(AXY.x - StartX, AXY.y - StartY);
+      end;
+    end;
   StartX := AXY.x;
   StartY := AXY.y;
 end;
@@ -267,6 +299,8 @@ begin
   Result := inherited Finish(AFigureIndex);
   IsDraggable := False;
   IsResizable:=False;
+  IsWideResizableLeft:=False;
+  IsWideResizableRight:=False;
   DeleteLastFigure(AFigureIndex);
 end;
 
