@@ -284,8 +284,10 @@ begin
     l.Caption := i.Name;
     l.Align := alBottom;
     ParamPanel.Visible := True;
-    Invalidate();
   end;
+   If (FCurrentToolClass<>TZoomTool) and (FCurrentToolClass<>TSelectionTool) and
+    (FCurrentToolClass<>TClickTool) and (FCurrentToolClass<>THandTool) then UnSelectAll();
+   invalidate;
 end;
 
 
