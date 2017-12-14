@@ -14,8 +14,11 @@ type
   TParam = class
   private
     FName: string;
+    AttachedParams: array of TParam;
     procedure ChangeControl(Sender: TObject); virtual; abstract;
   public
+    procedure AttachParam(AParam: TParam);
+    procedure UnAttach();
     property Name: string read FName;
     function ToControl(AParentPanel: TPanel): TControl; virtual; abstract;
   end;
@@ -32,6 +35,7 @@ type
     property Value: TColor read FPenColor;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TPenColorParam;
   end;
 
   { TBrushColorParam }
@@ -44,6 +48,7 @@ type
     property Value: TColor read FBrushColor;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TBrushColorParam;
   end;
 
   { TWidthParam }
@@ -56,6 +61,7 @@ type
     property Value: integer read FWidth;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TWidthParam;
   end;
 
   { TRadiusParam }
@@ -68,6 +74,7 @@ type
     property Value: integer read FRadius;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TRadiusParam;
   end;
 
   { TBrushStyleParam }
@@ -87,6 +94,7 @@ type
     property Value: TBrushStyle read FGetBrushStyle;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TBrushStyleParam;
   end;
 
   { TPenStyleParam }
@@ -106,9 +114,23 @@ type
     property Value: TPenStyle read FGetPenStyle;
     constructor Create;
     function ToControl(AParentPanel: TPanel): TControl; override;
+    function Copy: TPenStyleParam;
   end;
 
 implementation
+
+{ TParam }
+
+procedure TParam.AttachParam(AParam: TParam);
+begin
+  SetLength(AttachedParams, Length(AttachedParams) + 1);
+  AttachedParams[High(AttachedParams)] := AParam;
+end;
+
+procedure TParam.UnAttach();
+begin
+  SetLength(AttachedParams, 0);
+end;
 
 { TPenStyleParam }
 
@@ -118,8 +140,16 @@ begin
 end;
 
 procedure TPenStyleParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FLineIndex := (Sender as TComboBox).ItemIndex;
+  if AttachedParams <> nil then
+  begin
+    for p in AttachedParams do
+      (p as TPenStyleParam).FLineIndex := (Sender as TComboBox).ItemIndex;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 procedure TPenStyleParam.FDrawItem(Control: TWinControl; Index: integer;
@@ -163,6 +193,13 @@ begin
   end;
 end;
 
+function TPenStyleParam.Copy: TPenStyleParam;
+begin
+  Result := TPenStyleParam.Create;
+  Result.FName := FName;
+  Result.FLineIndex := FLineIndex;
+end;
+
 { TBrushStyleParam }
 
 function TBrushStyleParam.FGetBrushStyle: TBrushStyle;
@@ -171,8 +208,16 @@ begin
 end;
 
 procedure TBrushStyleParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FFillIndex := (Sender as TComboBox).ItemIndex;
+  if Length(AttachedParams) > 0 then
+  begin
+    for p in AttachedParams do
+      (p as TBrushStyleParam).FFillIndex := (Sender as TComboBox).ItemIndex;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 procedure TBrushStyleParam.FDrawItem(Control: TWinControl; Index: integer;
@@ -219,11 +264,26 @@ begin
   end;
 end;
 
+function TBrushStyleParam.Copy: TBrushStyleParam;
+begin
+  Result := TBrushStyleParam.Create;
+  Result.FName := FName;
+  Result.FFillIndex := FFillIndex;
+end;
+
 { TRadiusParam }
 
 procedure TRadiusParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FRadius := (Sender as TTrackBar).Position;
+  if Length(AttachedParams) > 0 then
+  begin
+    for p in AttachedParams do
+      (p as TRadiusParam).FRadius := (Sender as TTrackBar).Position;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 constructor TRadiusParam.Create;
@@ -246,11 +306,26 @@ begin
   end;
 end;
 
+function TRadiusParam.Copy: TRadiusParam;
+begin
+  Result := TRadiusParam.Create;
+  Result.FName := FName;
+  Result.FRadius := FRadius;
+end;
+
 { TWidthParam }
 
 procedure TWidthParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FWidth := (Sender as TTrackBar).Position;
+  if Length(AttachedParams) > 0 then
+  begin
+    for p in AttachedParams do
+      (p as TWidthParam).FWidth := (Sender as TTrackBar).Position;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 constructor TWidthParam.Create;
@@ -273,11 +348,26 @@ begin
   end;
 end;
 
+function TWidthParam.Copy: TWidthParam;
+begin
+  Result := TWidthParam.Create;
+  Result.FName := FName;
+  Result.FWidth := FWidth;
+end;
+
 { TBrushColorParam }
 
 procedure TBrushColorParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FBrushColor := (Sender as TColorBox).Selected;
+  if Length(AttachedParams) > 0 then
+  begin
+    for p in AttachedParams do
+      (p as TBrushColorParam).FBrushColor := (Sender as TColorBox).Selected;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 constructor TBrushColorParam.Create;
@@ -299,11 +389,26 @@ begin
   end;
 end;
 
+function TBrushColorParam.Copy: TBrushColorParam;
+begin
+  Result := TBrushColorParam.Create;
+  Result.FName := FName;
+  Result.FBrushColor := FBrushColor;
+end;
+
 { TPenColorParam }
 
 procedure TPenColorParam.ChangeControl(Sender: TObject);
+var
+  p: TParam;
 begin
   FPenColor := (Sender as TColorBox).Selected;
+  if Length(AttachedParams) > 0 then
+  begin
+    for p in AttachedParams do
+      (p as TPenColorParam).FPenColor := (Sender as TColorBox).Selected;
+    (Sender as TControl).GetTopParent.Invalidate;
+  end;
 end;
 
 constructor TPenColorParam.Create;
@@ -323,6 +428,13 @@ begin
     Selected := FPenColor;
     OnSelect := @ChangeControl;
   end;
+end;
+
+function TPenColorParam.Copy: TPenColorParam;
+begin
+  Result := TPenColorParam.Create;
+  Result.FName := FName;
+  Result.FPenColor := FPenColor;
 end;
 
 end.

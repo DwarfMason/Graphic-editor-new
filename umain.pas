@@ -20,6 +20,7 @@ type
     HelpMenu: TMenuItem;
     MenuItem1: TMenuItem;
     DeleteBtn: TMenuItem;
+    NewFileBtn: TMenuItem;
     NoneSpace: TMenuItem;
     MoveUpBtn: TMenuItem;
     MoveDownBtn: TMenuItem;
@@ -40,6 +41,7 @@ type
     procedure MoveDownBtnClick(Sender: TObject);
     procedure HelpMenuClick(Sender: TObject);
     procedure MoveUpBtnClick(Sender: TObject);
+    procedure NewFileBtnClick(Sender: TObject);
     procedure SelectAllClick(Sender: TObject);
     procedure ToolsListSelectionChange(Sender: TObject; User: boolean);
     procedure WorkPlaceMouseDown(Sender: TObject; Button: TMouseButton;
@@ -55,6 +57,7 @@ type
     procedure WorkPlaceMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure WorkPlacePaint(Sender: TObject);
+    procedure UpdateParams;
     procedure ZoomQChange(Sender: TObject);
     procedure ZoomQKeyPress(Sender: TObject; var Key: char);
 
@@ -70,6 +73,7 @@ var
   MainForm: TMainForm;
   isDrawing: boolean;
   WorldTopLeft, WorldBottomRight: TFloatPoint;
+  ParamsList: TParamList;
 
 implementation
 
@@ -85,6 +89,7 @@ begin
   SetScrollBar();
   for i := 0 to ToolsCount() - 1 do
     ToolsList.Items.add(GetTool(i).GetName());
+  ToolsList.ItemIndex := 0;
   FCurrentFigureIndex := -1;
   workplace.canvas.Brush.color := clWhite;
 end;
@@ -106,9 +111,18 @@ begin
   invalidate;
 end;
 
+procedure TMainForm.NewFileBtnClick(Sender: TObject);
+begin
+  PSelectAll();
+  DeleteSelected();
+  ZoomQ.Value:=100;
+  invalidate;
+end;
+
 procedure TMainForm.SelectAllClick(Sender: TObject);
 begin
   PSelectAll();
+  UpdateParams;
   invalidate;
 end;
 
@@ -233,6 +247,7 @@ begin
     begin
       FCurrentFigureIndex := cFigureIndexInvalid;
       ToolBar.Enabled := True;
+      UpdateParams;
       WorkPlace.invalidate();
     end;
   end;
@@ -253,6 +268,31 @@ begin
   end;
 end;
 
+procedure TMainForm.UpdateParams;
+var
+  i: TParam;
+  l: TLabel;
+begin
+  FCurrentToolClass := GetTool(ToolsList.ItemIndex);
+  ParamPanel.DestroyComponents;
+  ParamsList := FCurrentToolClass.GetParams;
+  if ParamsList = nil then
+    ParamsList := GetSelectionParams;
+  if ParamsList <> nil then
+  begin
+    for i in ParamsList do
+    begin
+      ParamPanel.Visible := False;
+      i.ToControl(ParamPanel).Align := alBottom;
+      l := TLabel.Create(ParamPanel);
+      l.Parent := ParamPanel;
+      l.Caption := i.Name;
+      l.Align := alBottom;
+      ParamPanel.Visible := True;
+    end;
+  end;
+end;
+
 procedure TMainForm.ZoomQChange(Sender: TObject);
 var
   Middle: TFloatPoint;
@@ -269,25 +309,9 @@ begin
 end;
 
 procedure TMainForm.ToolsListSelectionChange(Sender: TObject; User: boolean);
-var
-  i: TParam;
-  l: TLabel;
 begin
-  FCurrentToolClass := GetTool(ToolsList.ItemIndex);
-  ParamPanel.DestroyComponents;
-  for i in FCurrentToolClass.Params do
-  begin
-    ParamPanel.Visible := False;
-    i.ToControl(ParamPanel).Align := alBottom;
-    l := TLabel.Create(ParamPanel);
-    l.Parent := ParamPanel;
-    l.Caption := i.Name;
-    l.Align := alBottom;
-    ParamPanel.Visible := True;
-  end;
-   If (FCurrentToolClass<>TZoomTool) and (FCurrentToolClass<>TSelectionTool) and
-    (FCurrentToolClass<>TClickTool) and (FCurrentToolClass<>THandTool) then UnSelectAll();
-   invalidate;
+  UpdateParams;
+  invalidate;
 end;
 
 

@@ -15,24 +15,18 @@ type
 
   { TBigFigureClass }
 
-  TBigFigureClass = class
-    FPoints: array of TFloatPoint;
-  strict protected
-    FWidth: integer;
-    FPenStyle: TPenStyle;
-    FPenColor: TColor;
-    FBrushStyle: TBrushStyle;
-    FBrushColor: TColor;
-    FRadius: integer;
+  TBigFigureClass = class(TPersistent)
+  protected
+    FWidth: TWidthParam;
+    FPenStyle: TPenStyleParam;
+    FPenColor: TPenColorParam;
+    FBrushStyle: TBrushStyleParam;
+    FBrushColor: TBrushColorParam;
+    FRadius: TRadiusParam;
   public
+    FPoints: array of TFloatPoint;
     selected: boolean;
     function PointsCount(): SizeInt;
-    property Width: integer read FWidth write FWidth;
-    property PenColor: TColor read FPenColor write FPenColor;
-    property PenStyle: TPenStyle read FPenStyle write FPenStyle;
-    property BrushStyle: TBrushStyle read FBrushStyle write FBrushStyle;
-    property BrushColor: TColor read FBrushColor write FBrushColor;
-    property Radius: integer read FRadius write FRadius;
     function InRectangle(SelectionTL, SelectionBR: TFloatPoint): boolean;
     procedure addPoint(AValue: TFloatPoint);
     function GetPoints(AIndex: SizeInt): TFloatPoint;
@@ -46,6 +40,14 @@ type
     procedure ResizeFigure(APointIndex: SizeInt; dX, dY: extended);
     procedure WideResizeL(dX, dY: extended);
     procedure WideResizeR(dX, dY: extended);
+    function GetParams: TParamList; virtual; abstract;
+  published
+    property Width: TWidthParam read FWidth write FWidth;
+    property PenColor: TPenColorParam read FPenColor write FPenColor;
+    property PenStyle: TPenStyleParam read FPenStyle write FPenStyle;
+    property BrushStyle: TBrushStyleParam read FBrushStyle write FBrushStyle;
+    property BrushColor: TBrushColorParam read FBrushColor write FBrushColor;
+    property Radius: TRadiusParam read FRadius write FRadius;
   end;
 
 
@@ -65,33 +67,35 @@ type
 
   TPencil = class(TBigFigureClass)
     procedure Draw(ACanvas: TCanvas); override;
+    function GetParams: TParamList; override;
   end;
 
   { TLine }
 
   TLine = class(TBigFigureClass)
     procedure Draw(ACanvas: TCanvas); override;
+    function GetParams: TParamList; override;
   end;
 
   { TRectangle }
 
   TRectangle = class(TBigFigureClass)
-  public
     procedure Draw(ACanvas: TCanvas); override;
+    function GetParams: TParamList; override;
   end;
 
   { TEllipse }
 
   TEllipse = class(TBigFigureClass)
-  public
     procedure Draw(ACanvas: TCanvas); override;
+    function GetParams: TParamList; override;
   end;
 
   { TRndRectangle }
 
   TRndRectangle = class(TBigFigureClass)
-  public
     procedure Draw(ACanvas: TCanvas); override;
+    function GetParams: TParamList; override;
   end;
 
   TCanvasFigure = class of TBigFigureClass;
@@ -105,6 +109,7 @@ procedure PSelectAll();
 procedure UnSelectAll();
 procedure MoveUp();
 procedure MoveDown();
+function GetSelectionParams: TParamList;
 
 var
   FiguresData: array of TBigFigureClass;
@@ -156,12 +161,21 @@ end;
 procedure UnselectAll;
 var
   i: SizeInt;
+  Param: TParam;
+  ParamList: TParamList;
 begin
-  for i := 0 to FiguresCount() - 1 do
+  if FiguresData <> nil then
   begin
-    GetFigure(i).selected := False;
+    ParamList := GetSelectionParams;
+    if ParamList <> nil then
+      for param in GetSelectionParams do
+        Param.UnAttach();
+    for i := 0 to FiguresCount() - 1 do
+    begin
+      GetFigure(i).selected := False;
+    end;
   end;
-     end;
+end;
 
 procedure MoveUp;
 var
@@ -191,6 +205,59 @@ begin
       t := FiguresData[i - 1];
       FiguresData[i - 1] := FiguresData[i];
       FiguresData[i] := t;
+    end;
+  end;
+end;
+
+function GetSelectionParams: TParamList;
+var
+  Figure: TBigFigureClass;
+  FigureParams: TParamList;
+  SameParams: array of TParamList;
+  Param0, Param1: TParam;
+  i, j, SelectionCount: SizeInt;
+begin
+  SelectionCount := 0;
+  for Figure in FiguresData do
+  begin
+    if Figure.selected then
+    begin
+      Inc(SelectionCount);
+      FigureParams := Figure.GetParams;
+      if length(SameParams) = 0 then
+      begin
+        SetLength(SameParams, Length(FigureParams));
+        for i := Low(FigureParams) to High(FigureParams) do
+        begin
+          Setlength(SameParams[i], 1);
+          SameParams[i][0] := FigureParams[i];
+        end;
+      end
+      else
+      begin
+        for Param0 in FigureParams do
+        begin
+          for i := Low(SameParams) to High(SameParams) do
+          begin
+            Param1 := SameParams[i][Length(SameParams[i])-1];
+            if (Param1.ClassType = Param0.ClassType) then
+            begin
+              SetLength(SameParams[i], Length(SameParams[i]) + 1);
+              SameParams[i][Length(SameParams[i]) - 1] := Param0;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  for i := Low(SameParams) to High(SameParams) do
+  begin
+    if Length(SameParams[i]) = SelectionCount then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[length(Result) - 1] := SameParams[i][0];
+      for j := 0 to High(SameParams[i]) do
+        Result[Length(Result) - 1].AttachParam(SameParams[i][j]);
     end;
   end;
 end;
@@ -246,10 +313,15 @@ var
   Counter: SizeInt;
 begin
   inherited;
-  ACanvas.Brush.Color := FBrushColor;
-  ACanvas.Brush.Style := FBrushStyle;
+  ACanvas.Brush.Color := FBrushColor.Value;
+  ACanvas.Brush.Style := FBrushStyle.Value;
   CPoints := GetCanvasPoints();
   ACanvas.Ellipse(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
+end;
+
+function TEllipse.GetParams: TParamList;
+begin
+  Result := TParamList.Create(FPenColor, FBrushColor, FWidth, FPenStyle, FBrushStyle);
 end;
 
 { TRectangle }
@@ -260,10 +332,15 @@ var
   Counter: SizeInt;
 begin
   inherited;
-  ACanvas.Brush.Color := FBrushColor;
-  ACanvas.Brush.Style := FBrushStyle;
+  ACanvas.Brush.Color := FBrushColor.Value;
+  ACanvas.Brush.Style := FBrushStyle.Value;
   CPoints := GetCanvasPoints();
   ACanvas.Rectangle(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
+end;
+
+function TRectangle.GetParams: TParamList;
+begin
+  Result := TParamList.Create(FPenColor, FBrushColor, FWidth, FPenStyle, FBrushStyle);
 end;
 
 { TLine }
@@ -271,21 +348,28 @@ end;
 procedure TLine.Draw(ACanvas: TCanvas);
 var
   CPoints: TPointArray;
-  Counter: SizeInt;
 begin
   inherited;
   CPoints := GetCanvasPoints();
   ACanvas.Line(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y);
 end;
 
+function TLine.GetParams: TParamList;
+begin
+  Result := TParamList.Create(FPenColor, FWidth, FPenStyle);
+end;
+
 { TPencil }
 
 procedure TPencil.Draw(ACanvas: TCanvas);
-var
-  Counter: SizeInt;
 begin
   inherited;
   ACanvas.Polyline(GetCanvasPoints());
+end;
+
+function TPencil.GetParams: TParamList;
+begin
+  Result := TParamList.Create(FPenColor, FWidth, FPenStyle);
 end;
 
 { TRndRectangle }
@@ -293,14 +377,19 @@ end;
 procedure TRndRectangle.Draw(ACanvas: TCanvas);
 var
   CPoints: TPointArray;
-  Counter: SizeInt;
 begin
   inherited;
-  ACanvas.Brush.Color := FBrushColor;
-  ACanvas.Brush.Style := FBrushStyle;
+  ACanvas.Brush.Color := FBrushColor.Value;
+  ACanvas.Brush.Style := FBrushStyle.Value;
   CPoints := GetCanvasPoints();
   ACanvas.RoundRect(CPoints[0].x, CPoints[0].y, CPoints[1].x, CPoints[1].y,
-    Radius, Radius);
+    FRadius.Value, FRadius.Value);
+end;
+
+function TRndRectangle.GetParams: TParamList;
+begin
+  Result := TParamList.Create(FPenColor, FBrushColor, FWidth, FPenStyle,
+    FBrushStyle, FRadius);
 end;
 
 { TBigFigureClass }
@@ -349,13 +438,10 @@ begin
 end;
 
 procedure TBigFigureClass.Draw(ACanvas: TCanvas);
-var
-  counter: SizeInt;
-  i: SizeInt;
 begin
-  ACanvas.Pen.Width := FWidth;
-  ACanvas.Pen.Style := FPenStyle;
-  ACanvas.Pen.Color := FPenColor;
+  ACanvas.Pen.Width := FWidth.Value;
+  ACanvas.Pen.Style := FPenStyle.Value;
+  ACanvas.Pen.Color := FPenColor.Value;
 end;
 
 procedure TBigFigureClass.SetPoint(AIndex: SizeInt; AValue: TFloatPoint);
@@ -437,23 +523,24 @@ begin
       AnchorPoint := WorldToScreen(FPoints[i].x, FPoints[i].y);
       Rectangle(AnchorPoint.x - PADDING, AnchorPoint.y - PADDING,
         AnchorPoint.x + PADDING, AnchorPoint.y + PADDING);
-          Rectangle(AllFiguresTL.x - 2*PADDING, AllFiguresTL.y - 2*PADDING,
+      Rectangle(AllFiguresTL.x - 2 * PADDING, AllFiguresTL.y - 2 * PADDING,
         AllFiguresTL.x, AllFiguresTL.y);
-  Rectangle(AllFiguresBR.x, AllFiguresBR.y,
-        AllFiguresBR.x + 2*PADDING, AllFiguresBR.y + 2*PADDING);
+      Rectangle(AllFiguresBR.x, AllFiguresBR.y,
+        AllFiguresBR.x + 2 * PADDING, AllFiguresBR.y + 2 * PADDING);
     end;
     Pen.color := clBlue;
     Pen.Width := 3;
     Pen.Style := psDash;
     Brush.Style := BsClear;
-    Rectangle(FigureTL.x - (FWidth div 2), FigureTL.y -
-      (FWidth div 2), FigureBR.x + (FWidth div 2),
-      FigureBR.y + (FWidth div 2));
-    Rectangle(AllFiguresTL.x - (FWidth div 2) - PADDING, AllFiguresTL.y - PADDING -
-    (FWidth div 2), AllFiguresBR.x + (FWidth div 2) + PADDING, AllFiguresBR.y + PADDING + (FWidth div 2));
+    Rectangle(FigureTL.x, FigureTL.y,
+      FigureBR.x,
+      FigureBR.y);
+    Rectangle(AllFiguresTL.x - PADDING, AllFiguresTL.y - PADDING,
+      AllFiguresBR.x + PADDING,
+      AllFiguresBR.y + PADDING);
   end;
-  SelectionBottomRight := AllFiguresBR;
-  SelectionTopLeft := AllFiguresTL;
+  SelectionBottomRight := Point(AllFiguresBR.x + PADDING, AllFiguresBR.y + PADDING);
+  SelectionTopLeft := Point(AllFiguresTL.x - PADDING, AllFiguresTL.y - PADDING);
 end;
 
 procedure TBigFigureClass.MoveFigure(dX, dY: extended);
@@ -467,32 +554,47 @@ begin
   end;
 end;
 
-procedure TBigFigureClass.ResizeFigure(APointIndex: SizeInt; dX,
-  dY: extended);
+procedure TBigFigureClass.ResizeFigure(APointIndex: SizeInt; dX, dY: extended);
 begin
-  FPoints[APointIndex].x:=FPoints[APointIndex].x+dx;
-  FPoints[APointIndex].y:=FPoints[APointIndex].y+dy;
+  FPoints[APointIndex].x := FPoints[APointIndex].x + dx;
+  FPoints[APointIndex].y := FPoints[APointIndex].y + dy;
 end;
 
 procedure TBigFigureClass.WideResizeL(dX, dY: extended);
 var
-  i:SizeInt;
+  i: SizeInt;
+  TempX, TempY: Float;
 begin
+  TempX := SelectionTopLeft.x - SelectionBottomRight.x;
+  TempY := SelectionTopLeft.y - SelectionBottomRight.y;
+  if TempX = 0 then
+    TempX := -1;
+  if TempY = 0 then
+    TempY := -1;
   for i := Low(FPoints) to High(FPoints) do
   begin
-    FPoints[i].x:=FPoints[i].x +dx*(FPoints[i].x-SelectionBottomRight.x)/(SelectionTopLeft.x-SelectionBottomRight.x);
-    FPoints[i].y:=FPoints[i].y +dy*(FPoints[i].y-SelectionBottomRight.y)/(SelectionTopLeft.y-SelectionBottomRight.y);
+    FPoints[i].x := FPoints[i].x + dx * (FPoints[i].x -
+      SelectionBottomRight.x) / (TempX);
+    FPoints[i].y := FPoints[i].y + dy * (FPoints[i].y -
+      SelectionBottomRight.y) / (Tempy);
   end;
 end;
 
 procedure TBigFigureClass.WideResizeR(dX, dY: extended);
 var
-  i:SizeInt;
+  i: SizeInt;
+  TempX, TempY: Float;
 begin
+  TempX := SelectionBottomRight.x - SelectionTopLeft.x;
+  TempY := SelectionBottomRight.y - SelectionTopLeft.y;
+  if TempX = 0 then
+    TempX := -1;
+  if TempY = 0 then
+    TempY := -1;
   for i := Low(FPoints) to High(FPoints) do
   begin
-    FPoints[i].x:=FPoints[i].x +dx*(FPoints[i].x-SelectionTopLeft.x)/(SelectionBottomRight.x-SelectionTopLeft.x);
-    FPoints[i].y:=FPoints[i].y +dy*(FPoints[i].y-SelectionTopLeft.y)/(SelectionBottomRight.y-SelectionTopLeft.y);
+    FPoints[i].x := FPoints[i].x + dx * (FPoints[i].x - SelectionTopLeft.x) / (Tempx);
+    FPoints[i].y := FPoints[i].y + dy * (FPoints[i].y - SelectionTopLeft.y) / (TempY);
   end;
 end;
 

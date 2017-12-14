@@ -12,8 +12,8 @@ type
   { TBigTools }
 
   TBigTools = class
-  private
     class function GetParams: TParamList; static; virtual;
+
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); virtual; abstract;
     class property Params: TParamList read GetParams;
@@ -152,9 +152,9 @@ type
     class var
     StartX, StartY: double;
     IsDraggable: boolean;
-    IsResizable:boolean;
-    IsWideResizableLeft:boolean;
-    IsWideResizableRight:boolean;
+    IsResizable: boolean;
+    IsWideResizableLeft: boolean;
+    IsWideResizableRight: boolean;
     FigureIndex: SizeInt;
     AnchorIndex: SizeInt;
   public
@@ -199,48 +199,56 @@ end;
 
 class procedure TClickTool.Start(AFigureIndex: SizeInt; AXY: TPoint);
 const
-  PADDING=5;
+  PADDING = 5;
 var
-  i,j:SizeInt;
-  ScaleResize:TPoint;
+  i, j: SizeInt;
+  ScaleResize: TPoint;
 begin
   inherited Start(AFigureIndex, AXY);
   if (SelectionTopLeft.x <= AXY.x) and (SelectionTopLeft.y <= AXY.y) and
     (SelectionBottomRight.x >= AXY.x) and (SelectionBottomRight.y >= AXY.y) then
   begin
     IsDraggable := True;
-      StartX := AXY.x;
-      StartY := AXY.y;
+    StartX := AXY.x;
+    StartY := AXY.y;
   end;
-  For i:=0 to FiguresCount()-1 do begin
-    If GetFigure(i).selected then
-    For j:=Low(GetFigure(i).FPoints) to High(GetFigure(i).FPoints) do begin
-      ScaleResize:=WorldToScreen(GetFigure(i).FPoints[j].x,GetFigure(i).FPoints[j].y);
-      If (ScaleResize.x - PADDING < AXY.x) and
-        (ScaleResize.x + PADDING > AXY.x) and
-        (ScaleResize.y - PADDING < AXY.y) and
-        (ScaleResize.y + PADDING > AXY.y) then begin
-        FigureIndex:= i;
-        AnchorIndex:= j;
-        IsResizable := True;
-        IsDraggable := False;
+  for i := 0 to FiguresCount() - 1 do
+  begin
+    if GetFigure(i).selected then
+      for j := Low(GetFigure(i).FPoints) to High(GetFigure(i).FPoints) do
+      begin
+        ScaleResize := WorldToScreen(GetFigure(i).FPoints[j].x,
+          GetFigure(i).FPoints[j].y);
+        if (ScaleResize.x - PADDING < AXY.x) and (ScaleResize.x +
+          PADDING > AXY.x) and (ScaleResize.y - PADDING < AXY.y) and
+          (ScaleResize.y + PADDING > AXY.y) then
+        begin
+          FigureIndex := i;
+          AnchorIndex := j;
+          IsResizable := True;
+          IsDraggable := False;
         end;
-    end;
+      end;
   end;
-  If (SelectionTopLeft.x - 2*PADDING <= AXY.x) and (SelectionTopLeft.y - 2*PADDING <= AXY.y) and
-    (SelectionTopLeft.x >= AXY.x) and (SelectionTopLeft.y >= AXY.y) then begin
-     IsWideResizableLeft:=True;
-     IsResizable := False;
-     IsDraggable := False;
-     IsWideResizableRight:=False;
-    end;
-  If (SelectionBottomRight.x <= AXY.x) and (SelectionBottomRight.y <= AXY.y) and
-    (SelectionBottomRight.x + 2*PADDING >= AXY.x) and (SelectionBottomRight.y + 2*PADDING >= AXY.y) then begin
-     IsWideResizableLeft:=False;
-     IsResizable := False;
-     IsDraggable := False;
-     IsWideResizableRight:=True;
-    end;
+  if (SelectionTopLeft.x - PADDING <= AXY.x) and (SelectionTopLeft.y -
+    PADDING <= AXY.y) and (SelectionTopLeft.x + PADDING >= AXY.x) and
+    (SelectionTopLeft.y + PADDING >= AXY.y) then
+  begin
+    IsWideResizableLeft := True;
+    IsResizable := False;
+    IsDraggable := False;
+    IsWideResizableRight := False;
+  end;
+  if (SelectionBottomRight.x - PADDING <= AXY.x) and
+    (SelectionBottomRight.y - PADDING <= AXY.y) and
+    (SelectionBottomRight.x + PADDING >= AXY.x) and
+    (SelectionBottomRight.y + PADDING >= AXY.y) then
+  begin
+    IsWideResizableLeft := False;
+    IsResizable := False;
+    IsDraggable := False;
+    IsWideResizableRight := True;
+  end;
 
 end;
 
@@ -264,17 +272,18 @@ begin
     begin
       if GetFigure(i).selected then
       begin
-        GetFigure(i).MoveFigure(AXY.x - StartX, AXY.y - StartY);
+        GetFigure(i).MoveFigure((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
       end;
     end;
-  If IsResizable then
-  GetFigure(FigureIndex).ResizeFigure(AnchorIndex, AXY.x - StartX, AXY.y - StartY );
+  if IsResizable then
+    GetFigure(FigureIndex).ResizeFigure(AnchorIndex, (AXY.x - StartX) / Zoom,
+      (AXY.y - StartY) / Zoom);
   if IsWideResizableLeft then
     for i := 0 to FiguresCount() - 1 do
     begin
       if GetFigure(i).selected then
       begin
-        GetFigure(i).WideResizeL(AXY.x - StartX, AXY.y - StartY);
+        GetFigure(i).WideResizeL((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
       end;
     end;
   if IsWideResizableRight then
@@ -282,7 +291,7 @@ begin
     begin
       if GetFigure(i).selected then
       begin
-        GetFigure(i).WideResizeR(AXY.x - StartX, AXY.y - StartY);
+        GetFigure(i).WideResizeR((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
       end;
     end;
   StartX := AXY.x;
@@ -298,9 +307,9 @@ class function TClickTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
   Result := inherited Finish(AFigureIndex);
   IsDraggable := False;
-  IsResizable:=False;
-  IsWideResizableLeft:=False;
-  IsWideResizableRight:=False;
+  IsResizable := False;
+  IsWideResizableLeft := False;
+  IsWideResizableRight := False;
   DeleteLastFigure(AFigureIndex);
 end;
 
@@ -324,6 +333,7 @@ end;
 class procedure TSelectionTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
   inherited Start(AFigureIndex, AXY);
+  UnSelectAll();
 end;
 
 class function TSelectionTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
@@ -500,12 +510,12 @@ var
   FFigure: TBigFigureClass;
 begin
   FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[2] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
-  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
-  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
-  FFigure.Radius := (FParams[5] as TRadiusParam).Value;
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Copy;
+  FFigure.Width := (FParams[2] as TWidthParam).Copy;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Copy;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Copy;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Copy;
+  FFigure.Radius := (FParams[5] as TRadiusParam).Copy;
 end;
 
 class function TRndRectangleTool.GetName: string;
@@ -549,11 +559,11 @@ var
   FFigure: TBigFigureClass;
 begin
   FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[2] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
-  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
-  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Copy;
+  FFigure.Width := (FParams[2] as TWidthParam).Copy;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Copy;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Copy;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Copy;
 end;
 
 class function TEllipseTool.GetName: string;
@@ -598,11 +608,11 @@ var
   FFigure: TBigFigureClass;
 begin
   FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[2] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Value;
-  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Value;
-  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Value;
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Copy;
+  FFigure.Width := (FParams[2] as TWidthParam).Copy;
+  FFigure.PenStyle := (FParams[3] as TPenStyleParam).Copy;
+  FFigure.BrushColor := (FParams[1] as TBrushColorParam).Copy;
+  FFigure.BrushStyle := (FParams[4] as TBrushStyleParam).Copy;
 end;
 
 class function TRectangleTool.GetName: string;
@@ -647,9 +657,9 @@ var
   FFigure: TBigFigureClass;
 begin
   FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[1] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Copy;
+  FFigure.Width := (FParams[1] as TWidthParam).Copy;
+  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Copy;
 end;
 
 class function TLineTool.GetName: string;
@@ -693,9 +703,9 @@ var
   FFigure: TBigFigureClass;
 begin
   FFigure := GetFigure(AFigureIndex);
-  FFigure.PenColor := (FParams[0] as TPenColorParam).Value;
-  FFigure.Width := (FParams[1] as TWidthParam).Value;
-  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Value;
+  FFigure.PenColor := (FParams[0] as TPenColorParam).Copy;
+  FFigure.Width := (FParams[1] as TWidthParam).Copy;
+  FFigure.PenStyle := (FParams[2] as TPenStyleParam).Copy;
 end;
 
 class function TPencilTool.GetName: string;
