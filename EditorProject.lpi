@@ -33,7 +33,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="7">
       <Unit0>
         <Filename Value="EditorProject.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -66,6 +66,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="UParam"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="ufile.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UFile"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
