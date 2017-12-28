@@ -474,7 +474,8 @@ begin
   end;
   RedoBtn.Enabled := History.CanRedo;
   UndoBtn.Enabled := History.CanUndo;
-  If not History.CanUndo then MainForm.Caption := CurrentFileName + ' (*)';
+  If History.CanUndo then MainForm.Caption := CurrentFileName + ' (*)'
+  else MainForm.Caption := CurrentFileName;
 end;
 
 procedure TMainForm.ZoomQChange(Sender: TObject);
@@ -508,6 +509,7 @@ begin
   Invalidate;
 end;
 
-
+begin
+  CurrentFileName:='Новый';
 
 end.
