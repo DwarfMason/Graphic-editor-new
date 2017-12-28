@@ -10,7 +10,9 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
   UDraw,
   UTools,
   UScale,
-  UParam { you can add units after this };
+  UParam,
+  SuperObject,
+  UHistory { you can add units after this };
 
 {$R *.res}
 

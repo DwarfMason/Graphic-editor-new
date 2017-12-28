@@ -5,13 +5,14 @@ unit UDraw;
 interface
 
 uses
-  Classes, SysUtils, Graphics, GraphMath, Math, UScale, UParam;
+  Classes, SysUtils, Graphics, GraphMath, Math, UScale, UParam, typinfo;
 
 const
   cFigureIndexInvalid = -1;
 
 type
   TPointArray = array of TPoint;
+  TClassList = array of TPersistentClass;
 
   { TBigFigureClass }
 
@@ -41,6 +42,7 @@ type
     procedure WideResizeL(dX, dY: extended);
     procedure WideResizeR(dX, dY: extended);
     function GetParams: TParamList; virtual; abstract;
+    function Clone(): TBigFigureClass;
   published
     property Width: TWidthParam read FWidth write FWidth;
     property PenColor: TPenColorParam read FPenColor write FPenColor;
@@ -99,6 +101,7 @@ type
   end;
 
   TCanvasFigure = class of TBigFigureClass;
+  TFigureArray = array of TBigFigureClass;
 
 function AddFigure(AFigureClass: TCanvasFigure): SizeInt;
 function GetFigure(AIndex: SizeInt): TBigFigureClass;
@@ -110,6 +113,10 @@ procedure UnSelectAll();
 procedure MoveUp();
 procedure MoveDown();
 function GetSelectionParams: TParamList;
+function StrToClassFigure(str: string): TCanvasFigure;
+function GetProps(AObject: TObject; var APropList: PPropList): SizeInt;
+function CloneFigures(Source: TFigureArray): TFigureArray;
+
 
 var
   FiguresData: array of TBigFigureClass;
@@ -239,7 +246,7 @@ begin
         begin
           for i := Low(SameParams) to High(SameParams) do
           begin
-            Param1 := SameParams[i][Length(SameParams[i])-1];
+            Param1 := SameParams[i][Length(SameParams[i]) - 1];
             if (Param1.ClassType = Param0.ClassType) then
             begin
               SetLength(SameParams[i], Length(SameParams[i]) + 1);
@@ -258,6 +265,43 @@ begin
       Result[length(Result) - 1] := SameParams[i][0];
       for j := 0 to High(SameParams[i]) do
         Result[Length(Result) - 1].AttachParam(SameParams[i][j]);
+    end;
+  end;
+end;
+
+function StrToClassFigure(str: string): TCanvasFigure;
+begin
+  case str of
+    'TPencil': Result := TPencil;
+    'TLine': Result := TLine;
+    'TRectangle': Result := TRectangle;
+    'TEllipse': Result := TEllipse;
+    'TRndRectangle': Result := TRndRectangle;
+  end;
+end;
+
+function GetProps(AObject: TObject; var APropList: PPropList): SizeInt;
+var
+  Count: SizeInt;
+begin
+  Count := GetPropList(AObject.ClassInfo, tkAny, nil);
+  Result := Count;
+  GetMem(APropList, Count * SizeOf(PPropInfo));
+  GetPropList(AObject.ClassInfo, tkAny, APropList);
+end;
+
+function CloneFigures(Source: TFigureArray): TFigureArray;
+var
+  i: SizeInt;
+begin
+  if Source = nil then
+    exit(nil);
+  for i := low(Source) to High(Source) do
+  begin
+    if Source[i] <> nil then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := Source[i].Clone;
     end;
   end;
 end;
@@ -421,6 +465,7 @@ begin
       (SelectionTL.x <= FigureBR.x) and (SelectionTL.Y <= FigureBR.Y);
     pointed := True;
   end;
+
 end;
 
 procedure TBigFigureClass.addPoint(AValue: TFloatPoint);
@@ -573,10 +618,10 @@ begin
     TempY := -1;
   for i := Low(FPoints) to High(FPoints) do
   begin
-    FPoints[i].x := FPoints[i].x + dx * (FPoints[i].x -
-      SelectionBottomRight.x) / (TempX);
-    FPoints[i].y := FPoints[i].y + dy * (FPoints[i].y -
-      SelectionBottomRight.y) / (Tempy);
+    FPoints[i].x := FPoints[i].x + dx *
+      (FPoints[i].x - SelectionBottomRight.x) / (TempX);
+    FPoints[i].y := FPoints[i].y + dy *
+      (FPoints[i].y - SelectionBottomRight.y) / (Tempy);
   end;
 end;
 
@@ -598,6 +643,33 @@ begin
   end;
 end;
 
+function TBigFigureClass.Clone: TBigFigureClass;
+var
+  i: TFloatPoint;
 begin
+  Result := Self.ClassType.Create as TBigFigureClass;
+  for i in FPoints do
+  begin
+    SetLength(Result.FPoints, Length(Result.FPoints) + 1);
+    Result.FPoints[High(Result.FPoints)].x := i.x;
+    Result.FPoints[High(Result.FPoints)].y := i.y;
+  end;
+  if Width <> nil then
+    Result.Width := Width.Copy;
+  if PenColor <> nil then
+    Result.PenColor := PenColor.Copy;
+  if PenStyle <> nil then
+    Result.PenStyle := PenStyle.Copy;
+  if BrushColor <> nil then
+    Result.BrushColor := BrushColor.Copy;
+  if BrushStyle <> nil then
+    Result.BrushStyle := BrushStyle.Copy;
+  if Radius <> nil then
+    Result.Radius := Radius.Copy;
+end;
+
+begin
+  RegisterClasses(TClassList.Create(TPencil, TLine, TRectangle, TEllipse,
+    TRndRectangle));
   UnselectAll;
 end.

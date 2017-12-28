@@ -5,7 +5,7 @@ unit UTools;
 interface
 
 uses
-  Classes, SysUtils, UDraw, UScale, Controls, UParam;
+  Classes, SysUtils, UDraw, UScale, Controls, UParam, UHistory;
 
 type
 
@@ -13,6 +13,7 @@ type
 
   TBigTools = class
     class function GetParams: TParamList; static; virtual;
+
 
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); virtual; abstract;
@@ -157,6 +158,7 @@ type
     IsWideResizableRight: boolean;
     FigureIndex: SizeInt;
     AnchorIndex: SizeInt;
+    IsResized: boolean;
   public
     class procedure SetFigureParams(AFigureIndex: SizeInt); override;
     class procedure Start(AFigureIndex: SizeInt; AXY: TPoint); override;
@@ -205,6 +207,7 @@ var
   ScaleResize: TPoint;
 begin
   inherited Start(AFigureIndex, AXY);
+  IsResized := False;
   if (SelectionTopLeft.x <= AXY.x) and (SelectionTopLeft.y <= AXY.y) and
     (SelectionBottomRight.x >= AXY.x) and (SelectionBottomRight.y >= AXY.y) then
   begin
@@ -273,27 +276,37 @@ begin
       if GetFigure(i).selected then
       begin
         GetFigure(i).MoveFigure((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
+        IsResized := True;
       end;
     end;
+
   if IsResizable then
+  begin
     GetFigure(FigureIndex).ResizeFigure(AnchorIndex, (AXY.x - StartX) / Zoom,
       (AXY.y - StartY) / Zoom);
+    IsResized := True;
+  end;
+
   if IsWideResizableLeft then
     for i := 0 to FiguresCount() - 1 do
     begin
       if GetFigure(i).selected then
       begin
         GetFigure(i).WideResizeL((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
+        IsResized := True;
       end;
     end;
+
   if IsWideResizableRight then
     for i := 0 to FiguresCount() - 1 do
     begin
       if GetFigure(i).selected then
       begin
         GetFigure(i).WideResizeR((AXY.x - StartX) / Zoom, (AXY.y - StartY) / Zoom);
+        IsResized := True;
       end;
     end;
+
   StartX := AXY.x;
   StartY := AXY.y;
 end;
@@ -305,12 +318,14 @@ end;
 
 class function TClickTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result := inherited Finish(AFigureIndex);
+  Result := True;
   IsDraggable := False;
   IsResizable := False;
   IsWideResizableLeft := False;
   IsWideResizableRight := False;
   DeleteLastFigure(AFigureIndex);
+  if IsResized then
+    History.Push;
 end;
 
 { TSelectionTool }
@@ -333,7 +348,6 @@ end;
 class procedure TSelectionTool.Start(AFigureIndex: SizeInt; AXY: Tpoint);
 begin
   inherited Start(AFigureIndex, AXY);
-  UnSelectAll();
 end;
 
 class function TSelectionTool.Update(AFigureIndex: SizeInt; AXY: TPoint): boolean;
@@ -354,12 +368,11 @@ var
   i: SizeInt;
   Counter: SizeInt;
 begin
-  Result := inherited Finish(AFigureIndex);
+  Result := True; //inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
-  if not pointed then
-    for Counter := 0 to FiguresCount() - 1 do
-      GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor)
-  else
+  for Counter := 0 to FiguresCount() - 1 do
+    GetFigure(Counter).selected := GetFigure(Counter).InRectangle(AMinCor, AMaxCor);
+  if pointed then
   begin
     for Counter := 0 to FiguresCount() - 1 do
     begin
@@ -369,7 +382,6 @@ begin
           GetFigure(i).selected := False;
     end;
   end;
-
 end;
 
 { THandTool }
@@ -414,7 +426,7 @@ end;
 
 class function THandTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result := inherited Finish(AFigureIndex);
+  Result := True;//inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
 end;
 
@@ -442,6 +454,7 @@ end;
 class function TBigTools.Finish(AFigureIndex: SizeInt): boolean;
 begin
   Result := AFigureIndex <> cFigureIndexInvalid;
+  History.Push;
 end;
 
 { TZoomTool }
@@ -483,7 +496,7 @@ end;
 
 class function TZoomTool.Finish(AFigureIndex: SizeInt): boolean;
 begin
-  Result := inherited Finish(AFigureIndex);
+  Result := True; //inherited Finish(AFigureIndex);
   DeleteLastFigure(AFigureIndex);
 end;
 
